@@ -15,10 +15,8 @@ Texture::LoadImageToTexture(const std::string& filePath) {
         return LoadImageToTexture(MISSING_TEXTURE_PATH);
     }
 
-    // NOTE(Jovan): Images should usually flipped vertically as they are loaded "upside-down"
     stbi__vertical_flip(ImageData, TextureWidth, TextureHeight, TextureChannels);
 
-    // NOTE(Jovan): Checks or "guesses" the loaded image's format
     GLint InternalFormat = -1;
     switch (TextureChannels) {
     case 1: InternalFormat = GL_RED; break;
@@ -38,7 +36,6 @@ Texture::LoadImageToTexture(const std::string& filePath) {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glBindTexture(GL_TEXTURE_2D, 0);
-    // NOTE(Jovan): ImageData is no longer necessary in RAM and can be deallocated
     stbi_image_free(ImageData);
     return Texture;
 }

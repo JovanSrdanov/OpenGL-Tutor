@@ -1,14 +1,3 @@
-/**
- * @file model.hpp
- * @author Jovan Ivosevic
- * @brief Model wrapper class
- * @version 0.1
- * @date 2022-10-09
- *
- * @copyright Copyright (c) 2022
- *
- */
-
 #ifndef MESH_H
 
 #include <assimp/Importer.hpp>
@@ -26,47 +15,29 @@
 #define NORMAL_LOCATION 1
 
 #define POSTPROCESS_FLAGS (aiProcess_Triangulate)
-// TOOD(Jovan): IF model loads with bad textures, use this instead:
+// TOOD: (Jovan): IF model loads with bad textures, use this instead
 // #define POSTPROCESS_FLAGS (aiProcess_Triangulate | aiProcess_FlipUVs)
 #define INVALID_MATERIAL 0xFFFFFFFF
 
 enum EBufferType {
-    INDEX_BUFFER = 0,
-    POS_VB = 1,
-    TEXCOORD_VB = 2,
-    NORM_VB = 3,
-    BUFFER_COUNT = 4,
+	INDEX_BUFFER = 0,
+	POS_VB = 1,
+	TEXCOORD_VB = 2,
+	NORM_VB = 3,
+	BUFFER_COUNT = 4,
 };
 
 class Model {
-private:
-    std::vector<Mesh> mMeshes;
+public:
+	std::vector<Mesh> mMeshes;
 
 public:
-    std::string mFilename;
-    std::string mDirectory;
-
-    /**
-     * @brief Ctor - sets up data for model loading in Assimp
-     *
-     * @param filename - Model path
-     *
-     */
-    Model(std::string filename);
-
-    /**
-     * @brief Loads all the meshes and model data
-     *
-     * @returns true - Success, false - Failure
-     */
-    bool Load();
-
-    /**
-     * @brief Renderable Render implementation
-     *
-     */
-    void Render();
-
+	std::string mFilename;
+	std::string mDirectory;
+	Model(std::string filename);
+	bool Load();
+	void Render();
+	std::vector<float> GetVertices() const;
 };
 
 #define MESH_HP

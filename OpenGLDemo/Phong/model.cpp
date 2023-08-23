@@ -32,3 +32,11 @@ Model::Render() {
         mMeshes[MeshIdx].Render();
     }
 }
+std::vector<float> Model::GetVertices() const {
+    std::vector<float> vertices;
+    for (const auto& mesh : mMeshes) {
+        std::vector<float> meshVertices = mesh.GetVertices();
+        vertices.insert(vertices.end(), meshVertices.begin(), meshVertices.end());
+    }
+    return vertices;
+}
