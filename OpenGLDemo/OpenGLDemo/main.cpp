@@ -148,7 +148,7 @@ int main()
 		return -1;
 	}
 
-	const std::string WindowTitle = "Karibi Kontrolna Tacka 02";
+	const std::string WindowTitle = "OpenGLDemo";
 	int WindowWidth = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
 	int WindowHeight = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
 
@@ -156,7 +156,7 @@ int main()
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
-	glfwWindowHint(GLFW_SAMPLES, 8);
+	glfwWindowHint(GLFW_SAMPLES, 16);
 
 	Window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), 0, 0);
 	if (!Window)
