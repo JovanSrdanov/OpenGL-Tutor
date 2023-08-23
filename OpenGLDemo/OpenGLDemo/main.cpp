@@ -33,6 +33,9 @@ struct EngineState
 	bool mDrawDebugLines;
 	double mDT;
 	int mode=1;
+	double lastMouseX = 0;
+	double lastMouseY = 0;
+	bool firstMouse = true;
 };
 
 static void ErrorCallback(int error, const char* description)
@@ -81,11 +84,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	case GLFW_KEY_W: UserInput->MoveUp = IsDown; break;
 	case GLFW_KEY_S: UserInput->MoveDown = IsDown; break;
 
-	case GLFW_KEY_RIGHT: UserInput->LookLeft = IsDown; break;
-	case GLFW_KEY_LEFT: UserInput->LookRight = IsDown; break;
-	case GLFW_KEY_UP: UserInput->LookUp = IsDown; break;
-	case GLFW_KEY_DOWN: UserInput->LookDown = IsDown; break;
-
 	case GLFW_KEY_SPACE: UserInput->GoUp = IsDown; break;
 	case GLFW_KEY_C: UserInput->GoDown = IsDown; break;
 
@@ -101,9 +99,15 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	}
 }
 
+
+
+
+
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
+	EngineState* State = (EngineState*)glfwGetWindowUserPointer(window);
+	State->firstMouse = true;
 }
 
 static void HandleInput(EngineState* state)
@@ -115,10 +119,6 @@ static void HandleInput(EngineState* state)
 	if (UserInput->MoveDown) FPSCamera->Move(0.0f, -1.0f, state->mDT);
 	if (UserInput->MoveUp) FPSCamera->Move(0.0f, 1.0f, state->mDT);
 
-	if (UserInput->LookLeft) FPSCamera->Rotate(1.0f, 0.0f, state->mDT);
-	if (UserInput->LookRight) FPSCamera->Rotate(-1.0f, 0.0f, state->mDT);
-	if (UserInput->LookDown) FPSCamera->Rotate(0.0f, -1.0f, state->mDT);
-	if (UserInput->LookUp) FPSCamera->Rotate(0.0f, 1.0f, state->mDT);
 
 	if (UserInput->GoUp) FPSCamera->UpDown(1, state->mDT);
 	if (UserInput->GoDown) FPSCamera->UpDown(-1, state->mDT);
@@ -138,6 +138,31 @@ void printData(Camera cam) {
 
 	std::cout << "###\n";
 };
+
+
+// Add this function to handle mouse movement
+static void MouseCallback(GLFWwindow* window, double xpos, double ypos)
+{
+	EngineState* State = (EngineState*)glfwGetWindowUserPointer(window);
+
+	if (State->firstMouse)
+	{
+		State->lastMouseX = xpos;
+		State->lastMouseY = ypos;
+		State->firstMouse = false;
+	}
+
+	double xoffset = xpos - State->lastMouseX;
+	double yoffset = State->lastMouseY - ypos; // reversed since y-coordinates range from bottom to top
+
+	State->lastMouseX = xpos;
+	State->lastMouseY = ypos;
+
+	Camera* FPSCamera = State->mCamera;
+	float speed = 1.0;
+	FPSCamera->Rotate(static_cast<float>(xoffset* speed), static_cast<float>(yoffset*speed), State->mDT);
+}
+
 
 int main()
 {
@@ -166,6 +191,8 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(Window);
+	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide the cursor
+
 	glEnable(GL_MULTISAMPLE);
 
 	GLenum GlewError = glewInit();
@@ -186,6 +213,8 @@ int main()
 	glfwSetErrorCallback(ErrorCallback);
 	glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
 	glfwSetKeyCallback(Window, KeyCallback);
+	// Inside the main function, add this line to set the mouse callback
+	glfwSetCursorPosCallback(Window, MouseCallback);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -296,7 +325,7 @@ int main()
 	bool flash_light = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
-	float grey = 0.5;
+	float grey = 0.9;
 	glClearColor(grey, grey, grey, 1.0f);
 
 	//////////////////////////////////////////////////////////////////////////////////////////
