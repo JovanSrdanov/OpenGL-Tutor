@@ -46,61 +46,6 @@ static void ErrorCallback(int error, const char* description)
 	std::cerr << "GLFW Error: " << description << std::endl;
 }
 
-static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, int mode)
-{
-	EngineState* State = (EngineState*)glfwGetWindowUserPointer(window);
-	Input* UserInput = State->mInput;
-	bool IsDown = action == GLFW_PRESS || action == GLFW_REPEAT;
-	switch (key)
-	{
-	case GLFW_KEY_1:
-		if (IsDown)
-		{
-			State->mode = 1;
-		}
-		break;
-
-	case GLFW_KEY_2:
-		if (IsDown)
-		{
-			State->mode = 2;
-		}
-		break;
-
-	case GLFW_KEY_3:
-		if (IsDown)
-		{
-			State->mode = 3;
-		}
-		break;
-
-	case GLFW_KEY_4:
-		if (IsDown)
-		{
-			State->mode = 4;
-		}
-		break;
-
-
-	case GLFW_KEY_A: UserInput->MoveLeft = IsDown; break;
-	case GLFW_KEY_D: UserInput->MoveRight = IsDown; break;
-	case GLFW_KEY_W: UserInput->MoveUp = IsDown; break;
-	case GLFW_KEY_S: UserInput->MoveDown = IsDown; break;
-
-	case GLFW_KEY_SPACE: UserInput->GoUp = IsDown; break;
-	case GLFW_KEY_C: UserInput->GoDown = IsDown; break;
-
-	case GLFW_KEY_L:
-	{
-		if (IsDown)
-		{
-			State->mDrawDebugLines ^= true; break;
-		}
-	} break;
-
-	case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GLFW_TRUE); break;
-	}
-}
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -189,6 +134,12 @@ void HandleKeyInput(GLFWwindow* window, EngineState* state)
 		state->mode = 4;
 	}
 
+	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+	{
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
+
+
 	// Add other mode keys here
 }
 
@@ -220,7 +171,7 @@ int main()
 		return -1;
 	}
 	glfwMakeContextCurrent(window);
-	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide the cursor
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Hide the cursor
 
 	glEnable(GL_MULTISAMPLE);
 
@@ -241,7 +192,6 @@ int main()
 
 	glfwSetErrorCallback(ErrorCallback);
 	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
-	glfwSetKeyCallback(window, KeyCallback);
 	// Inside the main function, add this line to set the mouse callback
 	glfwSetCursorPosCallback(window, MouseCallback);
 
@@ -296,15 +246,6 @@ int main()
 		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
 	};
 
-
-	//Model woman("res/Woman/091_W_Aya_100K.obj");
-	//if (!woman.Load())
-	//{
-	//	std::cerr << "Failed to load model\n";
-	//	glfwTerminate();
-	//	return -1;
-	//}
-
 	unsigned CubeVAO;
 	glGenVertexArrays(1, &CubeVAO);
 	glBindVertexArray(CubeVAO);
@@ -324,6 +265,8 @@ int main()
 	Shader PhongShaderMaterialTexture("shaders/basic.vert", "shaders/phong_material_texture.frag");
 	glUseProgram(PhongShaderMaterialTexture.GetId());
 
+	PhongShaderMaterialTexture.SetUniform3f("uLineColor", glm::vec3(1, 1, 1));
+
 	// Default for point light (Sun)
 	PhongShaderMaterialTexture.SetUniform3f("uSunLight.Ka", glm::vec3(1.00, 0.97, 0.00));
 	PhongShaderMaterialTexture.SetUniform3f("uSunLight.Kd", glm::vec3(1.00, 0.97, 0.00));
@@ -342,7 +285,7 @@ int main()
 	// Materials
 	PhongShaderMaterialTexture.SetUniform1i("uMaterial.Kd", 0);
 	PhongShaderMaterialTexture.SetUniform1i("uMaterial.Ks", 1);
-	PhongShaderMaterialTexture.SetUniform1f("uMaterial.Shininess", 64);
+	PhongShaderMaterialTexture.SetUniform1f("uMaterial.Shininess", 1);
 
 	// Diffuse texture
 	unsigned RockDiffuseTexture = Texture::LoadImageToTexture("res/rock.jpg");
@@ -352,10 +295,11 @@ int main()
 	// Start values of variables
 	Shader* CurrentShader = &PhongShaderMaterialTexture;
 	bool flash_light = false;
+	bool isFKeyPressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
-	float grey = 0.9;
-	glClearColor(grey, grey, grey, 1.0f);
+	float backgroundColor = 0.7;
+	glClearColor(backgroundColor, backgroundColor, backgroundColor, 1.0f);
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// 
@@ -400,7 +344,7 @@ int main()
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// For text
-	
+
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
@@ -412,43 +356,31 @@ int main()
 	bool showHelloWindow = false;
 
 
-
 	while (!glfwWindowShouldClose(window)) {
-
 		start_time = glfwGetTime();
 		glfwPollEvents();
-
-		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
-		{
-			glfwSetWindowShouldClose(window, GLFW_TRUE);
-		}
-
-		// Call the function to handle key input
-		HandleKeyInput(window,&State);
-
-
+		HandleKeyInput(window, &State);
 		HandleInput(&State);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(CurrentShader->GetId());
 		CurrentShader->SetProjection(glm::perspective(70.0f, static_cast<float>(WindowWidth) / static_cast<float>(WindowHeight), 0.1f, 100.0f));
 		CurrentShader->SetView(glm::lookAt(FPSCamera.GetPosition(), FPSCamera.GetTarget(), FPSCamera.GetUp()));
 		CurrentShader->SetUniform3f("uViewPos", FPSCamera.GetPosition());
-
-
-
+		CurrentShader->SetModel(model_matrix);
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 		{
-			flash_light = true;
+			if (!isFKeyPressed)
+			{
+				isFKeyPressed = true;
+				flash_light = !flash_light;
+			}
 		}
-		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
+		else
 		{
-			flash_light = false;
+			isFKeyPressed = false;
 		}
-		//if (glfwGetKey(Window, GLFW_KEY_Q) == GLFW_PRESS)
-		//{
-		//	printData(FPSCamera);
-		//}
+
 		if (flash_light)
 		{
 			glm::vec3 pos = FPSCamera.GetTarget() - FPSCamera.GetPosition();
@@ -462,6 +394,7 @@ int main()
 			CurrentShader->SetUniform3f("uFlashLight.Kd", glm::vec3(0));
 			CurrentShader->SetUniform3f("uFlashLight.Ks", glm::vec3(0));
 		}
+
 		CurrentShader->SetUniform3f("uDirLight.Direction", glm::vec3(0, -0.1, 0));
 		CurrentShader->SetUniform3f("uDirLight.Ka", glm::vec3(0.68, 0.70, 0.51));
 		CurrentShader->SetUniform3f("uDirLight.Kd", glm::vec3(0.68, 0.70, 0.51));
@@ -471,38 +404,58 @@ int main()
 		CurrentShader->SetUniform1f("uSunLight.Kc", 0.1 / abs(sin(start_time)));
 		CurrentShader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
 		CurrentShader->SetUniform3f("uSunLight.Position", point_light_position_sun);
+		CurrentShader->SetUniform1f("uIsDrawingLines", 0);
 
-		glm::mat4 model_matrix(1.0f);
-		CurrentShader->SetModel(model_matrix);
-		glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-		// Main cube 
-		model_matrix = glm::mat4(1.0f);
-		model_matrix = glm::scale(model_matrix, glm::vec3(1));
-		CurrentShader->SetModel(model_matrix);
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, RockDiffuseTexture);
+
+		//// Mode 1 vertices
+		float desiredPointSize = 3.0f;
+		glPointSize(desiredPointSize);
 		glBindVertexArray(CubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
+		glDrawArrays(GL_POINTS, 0, CubeVertices.size() / 8);
+		glBindVertexArray(0);
 
-		// Bind the VAO and draw the vertices as points
+
+		// Bind and set shader uniforms
+	/*	CurrentShader->SetUniform1i("uIsDrawingLines", 1);
 		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-
 		glBindVertexArray(CubeVAO);
 		glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
 		glBindVertexArray(0);
+		CurrentShader->SetUniform1i("uIsDrawingLines", 0);*/
+
+		//// Mode 3 filled
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//glBindVertexArray(CubeVAO);
+		//glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
+		//glBindVertexArray(0);
+
+		//// Mode 4 normals
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+		//model_matrix = glm::mat4(1.0f);
+		//glBindVertexArray(NormalLinesVAO);
+		//glDrawArrays(GL_LINES, 0, NormalLineVertices.size() / 3);
+		//glBindVertexArray(0);
 
 
 
 
-		//////////////////////////////////////////////////////////////////////////////////////////
-		model_matrix = glm::mat4(1.0f);
-		CurrentShader->SetModel(model_matrix);
-		glBindVertexArray(NormalLinesVAO);
-		glDrawArrays(GL_LINES, 0, NormalLineVertices.size() / 3);
-		glBindVertexArray(0);
 
 
+		////// Mode 7
+		//glActiveTexture(GL_TEXTURE0);
+		//glBindTexture(GL_TEXTURE_2D, RockDiffuseTexture);
+		//glBindVertexArray(CubeVAO);
+		//glDrawArrays(GL_TRIANGLES, 0, CubeVertices.size() / 8);
+
+
+
+
+
+
+
+
+		//End of opengl part
 		glBindVertexArray(0);
 		glUseProgram(0);
 
@@ -532,10 +485,10 @@ int main()
 		// Render the "hello" window if the flag is set
 		if (showHelloWindow)
 		{
-			ImGui::SetNextWindowPos(ImVec2(WindowWidth / 2.0f, WindowHeight / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-			ImGui::SetNextWindowSize(ImVec2(100, 50));
-			ImGui::Begin("Hello", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-			ImGui::Text("Hello");
+			ImGui::SetNextWindowPos(ImVec2(WindowWidth / 4.0f, WindowHeight / 4.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+			ImGui::SetNextWindowSize(ImVec2(300, 50));
+			ImGui::Begin("CHO CHO", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+			ImGui::Text("VELIKA MASNA KURCINA");
 			ImGui::End();
 		}
 

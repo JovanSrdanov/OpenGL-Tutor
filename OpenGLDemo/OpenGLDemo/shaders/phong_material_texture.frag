@@ -42,7 +42,15 @@ in vec3 vWorldSpaceNormal;
 
 out vec4 FragColor;
 
+uniform int uIsDrawingLines;
+uniform vec3 uLineColor;
+
 void main() {
+	 if (uIsDrawingLines == 1) {
+        FragColor = vec4(uLineColor, 1.0f);
+		return;
+    }
+
 	vec3 ViewDirection = normalize(uViewPos - vWorldSpaceFragment);
 
 	// Directional Light
