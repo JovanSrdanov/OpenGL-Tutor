@@ -158,6 +158,40 @@ static void MouseCallback(GLFWwindow* window, double xpos, double ypos)
 	FPSCamera->Rotate(static_cast<float>(xoffset * speed), static_cast<float>(yoffset * speed), State->mDT);
 }
 
+void HandleKeyInput(GLFWwindow* window, EngineState* state)
+{
+	Input* UserInput = state->mInput;
+
+
+	UserInput->MoveLeft = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
+	UserInput->MoveRight = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
+	UserInput->MoveUp = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
+	UserInput->MoveDown = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
+	UserInput->GoUp = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
+	UserInput->GoDown = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
+
+	// Add other key checks here
+
+	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
+	{
+		state->mode = 1;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_2) == GLFW_PRESS)
+	{
+		state->mode = 2;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_3) == GLFW_PRESS)
+	{
+		state->mode = 3;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_4) == GLFW_PRESS)
+	{
+		state->mode = 4;
+	}
+
+	// Add other mode keys here
+}
+
 
 int main()
 {
@@ -375,19 +409,24 @@ int main()
 
 	// Setup style
 	ImGui::StyleColorsDark();
-
-	bool show_demo_window = true;
-	bool show_another_window = false;
-	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+	bool showHelloWindow = false;
 
 
 
 	while (!glfwWindowShouldClose(window)) {
 
-		ImGui_ImplGlfwGL3_NewFrame();
-		//////////////////////////////////////////////////////////////////////////////////////////
 		start_time = glfwGetTime();
 		glfwPollEvents();
+
+		if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
+		{
+			glfwSetWindowShouldClose(window, GLFW_TRUE);
+		}
+
+		// Call the function to handle key input
+		HandleKeyInput(window,&State);
+
+
 		HandleInput(&State);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(CurrentShader->GetId());
@@ -464,32 +503,47 @@ int main()
 		glBindVertexArray(0);
 
 
-
-		{
-			static float f = 0.0f;
-			static int counter = 0;
-			ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
-			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
-			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
-
-			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
-			ImGui::Checkbox("Another Window", &show_another_window);
-
-			if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
-				counter++;
-			ImGui::SameLine();
-			ImGui::Text("counter = %d", counter);
-
-			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-		}
-
-
 		glBindVertexArray(0);
 		glUseProgram(0);
 
+		ImGui_ImplGlfwGL3_NewFrame();
 
+		// Create an ImGui window for controlling the actions
+		ImGui::Begin("Controls");
+
+		if (ImGui::Button("Toggle Hello (U)"))
+		{
+			// Toggle the showHelloWindow flag
+			showHelloWindow = !showHelloWindow;
+		}
+
+		ImGui::End();
+
+		// Handle the "U" key press to show/hide the "hello" window
+		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
+		{
+			showHelloWindow = true;
+		}
+		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+		{
+			showHelloWindow = false;
+		}
+
+		// Render the "hello" window if the flag is set
+		if (showHelloWindow)
+		{
+			ImGui::SetNextWindowPos(ImVec2(WindowWidth / 2.0f, WindowHeight / 2.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
+			ImGui::SetNextWindowSize(ImVec2(100, 50));
+			ImGui::Begin("Hello", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
+			ImGui::Text("Hello");
+			ImGui::End();
+		}
+
+		// Render ImGui
 		ImGui::Render();
 		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+
 
 		glfwSwapBuffers(window);
 		State.mDT = glfwGetTime() - start_time;
