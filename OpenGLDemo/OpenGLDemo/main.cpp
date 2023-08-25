@@ -10,6 +10,7 @@
 #include "model.hpp"
 #include "texture.hpp"
 
+
 struct Input
 {
 	bool MoveLeft;
@@ -32,7 +33,7 @@ struct EngineState
 	unsigned mShadingMode;
 	bool mDrawDebugLines;
 	double mDT;
-	int mode=1;
+	int mode = 1;
 	double lastMouseX = 0;
 	double lastMouseY = 0;
 	bool firstMouse = true;
@@ -53,25 +54,25 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	case GLFW_KEY_1:
 		if (IsDown)
 		{
-			State->mode= 1; 
+			State->mode = 1;
 		}
 		break;
 
-	case GLFW_KEY_2: 
+	case GLFW_KEY_2:
 		if (IsDown)
 		{
 			State->mode = 2;
 		}
 		break;
 
-	case GLFW_KEY_3: 
+	case GLFW_KEY_3:
 		if (IsDown)
 		{
 			State->mode = 3;
 		}
 		break;
 
-	case GLFW_KEY_4: 
+	case GLFW_KEY_4:
 		if (IsDown)
 		{
 			State->mode = 4;
@@ -98,11 +99,6 @@ static void KeyCallback(GLFWwindow* window, int key, int scancode, int action, i
 	case GLFW_KEY_ESCAPE: glfwSetWindowShouldClose(window, GLFW_TRUE); break;
 	}
 }
-
-
-
-
-
 static void FramebufferSizeCallback(GLFWwindow* window, int width, int height)
 {
 	glViewport(0, 0, width, height);
@@ -123,9 +119,6 @@ static void HandleInput(EngineState* state)
 	if (UserInput->GoUp) FPSCamera->UpDown(1, state->mDT);
 	if (UserInput->GoDown) FPSCamera->UpDown(-1, state->mDT);
 }
-
-
-
 void printData(Camera cam) {
 	std::cout << "###\n";
 	std::cout << "Position";
@@ -159,8 +152,8 @@ static void MouseCallback(GLFWwindow* window, double xpos, double ypos)
 	State->lastMouseY = ypos;
 
 	Camera* FPSCamera = State->mCamera;
-	float speed = 1.0;
-	FPSCamera->Rotate(static_cast<float>(xoffset* speed), static_cast<float>(yoffset*speed), State->mDT);
+	float speed = 0.3;
+	FPSCamera->Rotate(static_cast<float>(xoffset * speed), static_cast<float>(yoffset * speed), State->mDT);
 }
 
 
@@ -366,6 +359,8 @@ int main()
 	// Unbind VAO and VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
+
+	//////////////////////////////////////////////////////////////////////////////////////////
 
 
 
