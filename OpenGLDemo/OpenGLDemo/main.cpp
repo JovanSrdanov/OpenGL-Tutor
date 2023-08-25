@@ -76,6 +76,15 @@ void print_data(Camera cam) {
 	std::cout << "###\n";
 };
 
+bool containsElement(const glm::vec3& target, const std::vector<glm::vec3>& added) {
+	for (const glm::vec3& element : added) {
+		if (element == target) {
+			return true; // Element found in the vector
+		}
+	}
+	return false; // Element not found in the vector
+}
+
 
 // Add this function to handle mouse movement
 void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
@@ -197,13 +206,27 @@ void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, cons
 
 void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
 {
-	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
+	mode_polygon_filled(cube_vertices, cube_vao, current_shader);
 
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(normal_lines_vao);
 	glDrawArrays(GL_LINES, 0, normal_line_vertices.size() / 3);
+	glBindVertexArray(0);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	current_shader->SetUniform1i("uIsPureColor", 0);
+}
+
+void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const unsigned cube_vao)
+{
+
+	mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+	current_shader->SetUniform1i("uIsPureColor", 1);
+	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+	glBindVertexArray(averaged_normal_lines_vao);
+	glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	current_shader->SetUniform1i("uIsPureColor", 0);
@@ -378,9 +401,14 @@ int main()
 
 		// Calculate the endpoints of the normal line
 		glm::vec3 start_point(x, y, z);
-		glm::vec3 end_point = start_point + glm::vec3(nx, ny, nz) * 0.5f;
+		glm::vec3 direction(nx, ny, nz);
 
-		// Add endpoints to the NormalLineVertices vector
+		// Normalize the direction vector
+		direction = glm::normalize(direction);
+
+		glm::vec3 scaled_direction = 0.5f * direction;
+		glm::vec3 end_point = start_point + scaled_direction;
+
 		normal_line_vertices.push_back(start_point.x);
 		normal_line_vertices.push_back(start_point.y);
 		normal_line_vertices.push_back(start_point.z);
@@ -403,7 +431,65 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	
+	std::vector<float> averaged_normal_vertices;
+
+	// Calculate averaged normals
+	for (size_t i = 0; i < cube_vertices.size(); i += 8) {
+		float start_x = cube_vertices[i];
+		float start_y = cube_vertices[i + 1];
+		float start_z = cube_vertices[i + 2];
+		glm::vec3 averaged_normal(0.0f);
+		std::vector<glm::vec3> added;
+
+		// Calculate the averaged normal by summing up normals with the same starting point
+		for (size_t j = 0; j < cube_vertices.size(); j += 8) {
+			float current_x = cube_vertices[j];
+			float current_y = cube_vertices[j + 1];
+			float current_z = cube_vertices[j + 2];
+			float current_nx = cube_vertices[j + 3];
+			float current_ny = cube_vertices[j + 4];
+			float current_nz = cube_vertices[j + 5];
+
+			if (start_x == current_x && start_y == current_y && start_z == current_z) {
+				glm::vec3 current_normal(current_nx, current_ny, current_nz);
+				if (!containsElement(current_normal, added)) {
+					averaged_normal += current_normal;
+					added.push_back(current_normal);
+				}
+			}
+		}
+
+		if (averaged_normal != glm::vec3(0.0f)) {
+			averaged_normal = glm::normalize(averaged_normal);
+
+			glm::vec3 scaled_direction = 0.5f * averaged_normal;
+			glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
+
+			averaged_normal_vertices.push_back(start_x);
+			averaged_normal_vertices.push_back(start_y);
+			averaged_normal_vertices.push_back(start_z);
+			averaged_normal_vertices.push_back(end_point.x);
+			averaged_normal_vertices.push_back(end_point.y);
+			averaged_normal_vertices.push_back(end_point.z);
+		}
+	}
+
+	unsigned averaged_normal_lines_vao;
+	glGenVertexArrays(1, &averaged_normal_lines_vao);
+	glBindVertexArray(averaged_normal_lines_vao);
+
+	unsigned averaged_normal_lines_vbo;
+	glGenBuffers(1, &averaged_normal_lines_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, averaged_normal_lines_vbo);
+	glBufferData(GL_ARRAY_BUFFER, averaged_normal_vertices.size() * sizeof(float), averaged_normal_vertices.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+	glEnableVertexAttribArray(0);
+
+	// Unbind VAO and VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
+
+
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 	// For text
@@ -419,7 +505,7 @@ int main()
 	bool show_hello_window = false;
 	///
 	///
-	
+
 
 
 	while (!glfwWindowShouldClose(window)) {
@@ -476,21 +562,24 @@ int main()
 		switch (state.mode)
 		{
 		case 1:
-			mode_vertices(cube_vertices, cube_vao,current_shader);
+			mode_vertices(cube_vertices, cube_vao, current_shader);
 			break;
 		case 2:
 			mode_polygon_lines(cube_vertices, cube_vao, current_shader);
 			break;
 		case 3:
-			mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+			mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
 			break;
 		case 4:
-			mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
+			mode_polygon_filled(cube_vertices, cube_vao, current_shader);
 			break;
 		case 5:
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
 			break;
 		case 6:
+			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
+			break;
+		case 7:
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, rock_diffuse_texture);
 			glBindVertexArray(cube_vao);
@@ -500,6 +589,8 @@ int main()
 		default:
 			break;
 		}
+
+
 
 
 		glBindVertexArray(0);
