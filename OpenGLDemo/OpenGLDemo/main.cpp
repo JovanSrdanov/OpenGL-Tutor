@@ -9,6 +9,8 @@
 #include "camera.hpp"
 #include "model.hpp"
 #include "texture.hpp"
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw_gl3.h"
 
 
 struct Input
@@ -159,7 +161,7 @@ static void MouseCallback(GLFWwindow* window, double xpos, double ypos)
 
 int main()
 {
-	GLFWwindow* Window = 0;
+	GLFWwindow* window = 0;
 	if (!glfwInit())
 	{
 		std::cerr << "Failed to init glfw" << std::endl;
@@ -176,15 +178,15 @@ int main()
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 16);
 
-	Window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), 0, 0);
-	if (!Window)
+	window = glfwCreateWindow(WindowWidth, WindowHeight, WindowTitle.c_str(), 0, 0);
+	if (!window)
 	{
 		std::cerr << "Failed to create window" << std::endl;
 		glfwTerminate();
 		return -1;
 	}
-	glfwMakeContextCurrent(Window);
-	glfwSetInputMode(Window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide the cursor
+	glfwMakeContextCurrent(window);
+	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // Hide the cursor
 
 	glEnable(GL_MULTISAMPLE);
 
@@ -201,13 +203,13 @@ int main()
 	Input UserInput = { 0 };
 	State.mCamera = &FPSCamera;
 	State.mInput = &UserInput;
-	glfwSetWindowUserPointer(Window, &State);
+	glfwSetWindowUserPointer(window, &State);
 
 	glfwSetErrorCallback(ErrorCallback);
-	glfwSetFramebufferSizeCallback(Window, FramebufferSizeCallback);
-	glfwSetKeyCallback(Window, KeyCallback);
+	glfwSetFramebufferSizeCallback(window, FramebufferSizeCallback);
+	glfwSetKeyCallback(window, KeyCallback);
 	// Inside the main function, add this line to set the mouse callback
-	glfwSetCursorPosCallback(Window, MouseCallback);
+	glfwSetCursorPosCallback(window, MouseCallback);
 
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
@@ -362,9 +364,28 @@ int main()
 
 	//////////////////////////////////////////////////////////////////////////////////////////
 
+	//////////////////////////////////////////////////////////////////////////////////////////
+	// For text
+	
+	ImGui::CreateContext();
+	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
+	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+	ImGui_ImplGlfwGL3_Init(window, true);
+
+	// Setup style
+	ImGui::StyleColorsDark();
+
+	bool show_demo_window = true;
+	bool show_another_window = false;
+	ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
 
 
-	while (!glfwWindowShouldClose(Window)) {
+
+	while (!glfwWindowShouldClose(window)) {
+
+		ImGui_ImplGlfwGL3_NewFrame();
+		//////////////////////////////////////////////////////////////////////////////////////////
 		start_time = glfwGetTime();
 		glfwPollEvents();
 		HandleInput(&State);
@@ -377,11 +398,11 @@ int main()
 
 
 
-		if (glfwGetKey(Window, GLFW_KEY_F) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 		{
 			flash_light = true;
 		}
-		if (glfwGetKey(Window, GLFW_KEY_G) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_G) == GLFW_PRESS)
 		{
 			flash_light = false;
 		}
@@ -442,11 +463,40 @@ int main()
 		glDrawArrays(GL_LINES, 0, NormalLineVertices.size() / 3);
 		glBindVertexArray(0);
 
+
+
+		{
+			static float f = 0.0f;
+			static int counter = 0;
+			ImGui::Text("Hello, world!");                           // Display some text (you can use a format string too)
+			ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f    
+			ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+
+			ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our windows open/close state
+			ImGui::Checkbox("Another Window", &show_another_window);
+
+			if (ImGui::Button("Button"))                            // Buttons return true when clicked (NB: most widgets return true when edited/activated)
+				counter++;
+			ImGui::SameLine();
+			ImGui::Text("counter = %d", counter);
+
+			ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
+		}
+
+
 		glBindVertexArray(0);
 		glUseProgram(0);
-		glfwSwapBuffers(Window);
+
+
+		ImGui::Render();
+		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+		glfwSwapBuffers(window);
 		State.mDT = glfwGetTime() - start_time;
 	}
+
+	ImGui_ImplGlfwGL3_Shutdown();
+	ImGui::DestroyContext();
 
 	glfwTerminate();
 	return 0;
