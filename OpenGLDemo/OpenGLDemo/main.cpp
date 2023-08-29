@@ -38,6 +38,7 @@ struct engine_state
 	double last_mouse_x = 0;
 	double last_mouse_y = 0;
 	bool first_mouse = true;
+	bool enable_mouse_callback = true;
 };
 
 void error_callback(int error, const char* description)
@@ -90,6 +91,10 @@ bool containsElement(const glm::vec3& target, const std::vector<glm::vec3>& adde
 void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
 {
 	auto* state = static_cast<engine_state*>(glfwGetWindowUserPointer(window));
+
+	if (!state->enable_mouse_callback) {
+		return;
+	}
 
 	if (state->first_mouse)
 	{
@@ -151,6 +156,10 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	{
 		state->mode = 7;
 	}
+	else if (glfwGetKey(window, GLFW_KEY_8) == GLFW_PRESS)
+	{
+		state->mode = 8;
+	}
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -166,7 +175,7 @@ void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_
 {
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.7f));
-	constexpr float desired_point_size = 5.0f;
+	constexpr float desired_point_size = 2.0f;
 	glPointSize(desired_point_size);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_POINTS, 0, cube_vertices.size() / 8);
@@ -206,7 +215,7 @@ void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, cons
 
 void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
 {
-	mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
 
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
@@ -221,7 +230,7 @@ void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_v
 void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const unsigned cube_vao)
 {
 
-	mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -334,6 +343,14 @@ int main()
 		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
 	};
 
+	Model woman("res/Woman/091_W_Aya_100K.obj");
+	if (!woman.Load())
+	{
+		std::cerr << "Failed to load model\n";
+		glfwTerminate();
+		return -1;
+	}
+
 	unsigned cube_vao;
 	glGenVertexArrays(1, &cube_vao);
 	glBindVertexArray(cube_vao);
@@ -381,7 +398,9 @@ int main()
 	// Start values of variables
 	Shader* current_shader = &phong_shader_material_texture;
 	bool flash_light = false;
+	bool show_gui = true;
 	bool is_f_key_pressed = false;
+	bool is_q_key_pressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
 	float background_color = 0.1f;
@@ -496,15 +515,14 @@ int main()
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
+	io.Fonts->AddFontFromFileTTF("res/FreeSans-LrmZ.ttf", 16);
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableGamepad;   // Enable Gamepad Controls
+
 	ImGui_ImplGlfwGL3_Init(window, true);
 
 	// Setup style
 	ImGui::StyleColorsDark();
-	bool show_hello_window = false;
-	///
-	///
+
 
 
 
@@ -533,6 +551,31 @@ int main()
 			is_f_key_pressed = false;
 		}
 
+		if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+		{
+			if (!is_q_key_pressed)
+			{
+				is_q_key_pressed = true;
+				show_gui = !show_gui;
+			}
+		}
+		else
+		{
+			is_q_key_pressed = false;
+		}
+
+		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+		{
+			state.enable_mouse_callback = false;
+		}
+		else
+		{
+			state.enable_mouse_callback = true;
+		}
+
+
+
+
 		if (flash_light)
 		{
 			glm::vec3 pos = fps_camera.GetTarget() - fps_camera.GetPosition();
@@ -552,7 +595,7 @@ int main()
 		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.68, 0.70, 0.51));
 		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1.0f));
 
-		glm::vec3 point_light_position_sun(0, 25, 0);
+		glm::vec3 point_light_position_sun(15, 5, 0);
 		current_shader->SetUniform1f("uSunLight.Kc", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform3f("uSunLight.Position", point_light_position_sun);
@@ -568,10 +611,10 @@ int main()
 			mode_polygon_lines(cube_vertices, cube_vao, current_shader);
 			break;
 		case 3:
-			mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
+			mode_polygon_filled(cube_vertices, cube_vao, current_shader);
 			break;
 		case 4:
-			mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+			mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
 			break;
 		case 5:
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
@@ -585,51 +628,116 @@ int main()
 			glBindVertexArray(cube_vao);
 			glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
 			break;
+		case 8:
+
+			break;
+
 
 		default:
 			break;
 		}
 
 
-
-
 		glBindVertexArray(0);
 		glUseProgram(0);
 
-		// IMGUI
+		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-		ImGui_ImplGlfwGL3_NewFrame();
 
-		// Create an ImGui window for controlling the actions
-		ImGui::Begin("Controls");
-
-		if (ImGui::Button("Toggle Hello (U)"))
+		if (show_gui)
 		{
-			// Toggle the showHelloWindow flag
-			show_hello_window = !show_hello_window;
-		}
-		ImGui::End();
 
-		if (glfwGetKey(window, GLFW_KEY_U) == GLFW_PRESS)
-		{
-			show_hello_window = true;
-		}
-		if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
-		{
-			show_hello_window = false;
-		}
+			ImGui_ImplGlfwGL3_NewFrame();
+			float margin = 0.05f;
 
-		if (show_hello_window)
-		{
-			ImGui::SetNextWindowPos(ImVec2(window_width / 4.0f, window_height / 4.0f), ImGuiCond_Always, ImVec2(0.5f, 0.5f));
-			ImGui::SetNextWindowSize(ImVec2(300, 50));
-			ImGui::Begin("CHO CHO", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize);
-			ImGui::Text("Hello");
+			int marginLeft = static_cast<int>(margin * window_width);  // 20% of screen width
+			int marginTop = static_cast<int>(margin * window_height); // 20% of screen height
+
+
+			ImGui::SetNextWindowPos(ImVec2(static_cast<float>(marginLeft), static_cast<float>(marginTop)));
+
+			ImGui::Begin("Modes", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing);
+
+			ImGui::Text("Selected mode:");
+
+
+			ImVec4 text_color(0.0f, 1.0f, 0.0f, 1.0f); // Green color
+			const char* modesText[] = {
+		"Mode 01 - Vertices",
+		"Mode 02 - Triangles",
+		"Mode 03 - Filled",
+		"Mode 04 - Filled with triangles",
+		"Mode 05 - All normals",
+		"Mode 06 - Averaged normals",
+		"Mode 07 - Shading",
+		"Mode 08 - Texture",
+		// Add more modes here...
+			};
+
+			for (int i = 0; i < std::size(modesText); ++i)
+			{
+				if (state.mode == i + 1)
+				{
+					ImGui::TextColored(text_color, modesText[i]);
+				}
+				else
+				{
+					ImGui::Text(modesText[i]);
+				}
+			}
+			ImGui::Separator();
+
+			text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+			const char* shadingText[] = {
+		"Gouraud",
+		"Phong",
+		"Bling-Phong",
+			};
+			ImGui::Text("Selected shading type:");
+			for (int i = 0; i < std::size(shadingText); ++i)
+			{
+				if (state.mode == i + 1)
+				{
+					ImGui::TextColored(text_color, shadingText[i]);
+				}
+				else
+				{
+					ImGui::Text(shadingText[i]);
+				}
+			}
+
+			ImGui::Separator();
+			ImGui::Text("Material parameters:");
 			ImGui::End();
-		}
 
-		ImGui::Render();
-		ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+
+			float screenWidth = static_cast<float>(ImGui::GetIO().DisplaySize.x);
+			float screenHeight = static_cast<float>(ImGui::GetIO().DisplaySize.y);
+			float marginX = 0.05f * screenWidth;
+			float marginY = 0.05f * screenHeight;
+
+			// Set the position of the window with the calculated margin
+			ImGui::SetNextWindowPos(ImVec2(marginX, screenHeight - marginY), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
+
+			// Begin the ImGui window
+			ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+			ImGui::Text("GUI toggle - Q");
+			ImGui::Text("Movement - W A S D");
+			ImGui::Text("Looking - Mouse or arrow keys");
+			ImGui::Text("Flashlight toggle - F");
+			ImGui::Text("Disable mouse - E (hold)");
+			ImGui::Separator();
+			ImGui::Text("Switching modes - 1 2 3 4 5 6 7 8");
+			ImGui::Separator();
+			ImGui::Text("Switching shading type:");
+			ImGui::Text("I (Gouraud):");
+			ImGui::Text("O (Phong):");
+			ImGui::Text("O (Bling-Phong):");
+			ImGui::End();
+
+			ImGui::Render();
+			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
+		}
 
 		glfwSwapBuffers(window);
 		state.m_dt = glfwGetTime() - start_time;
