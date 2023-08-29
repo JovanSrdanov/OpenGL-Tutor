@@ -27,18 +27,25 @@ struct input
 	bool go_down;
 };
 
+enum shading_mode
+{
+	FLAT,
+	GOURAUD,
+	PHONG
+};
+
 
 struct engine_state
 {
 	input* m_input;
 	Camera* m_camera;
-	unsigned m_shading_mode;
 	double m_dt;
 	int mode = 1;
 	double last_mouse_x = 0;
 	double last_mouse_y = 0;
 	bool first_mouse = true;
 	bool enable_mouse_callback = true;
+	shading_mode shading_mode = FLAT;
 };
 
 void error_callback(int error, const char* description)
@@ -93,6 +100,8 @@ void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
 	auto* state = static_cast<engine_state*>(glfwGetWindowUserPointer(window));
 
 	if (!state->enable_mouse_callback) {
+		state->last_mouse_x = x_pos;
+		state->last_mouse_y = y_pos;
 		return;
 	}
 
@@ -160,6 +169,18 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	{
 		state->mode = 8;
 	}
+	else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
+	{
+		state->shading_mode = FLAT;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
+	{
+		state->shading_mode = GOURAUD;
+	}
+	else if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
+	{
+		state->shading_mode = PHONG;
+	}
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
@@ -175,7 +196,7 @@ void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_
 {
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.7f));
-	constexpr float desired_point_size = 2.0f;
+	constexpr float desired_point_size = 1.0f;
 	glPointSize(desired_point_size);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_POINTS, 0, cube_vertices.size() / 8);
@@ -296,7 +317,16 @@ int main()
 	glEnable(GL_CULL_FACE);
 
 
-	std::vector<float> cube_vertices =
+	Model woman("res/Woman/091_W_Aya_100K.obj");
+	if (!woman.Load())
+	{
+		std::cerr << "Failed to load model\n";
+		glfwTerminate();
+		return -1;
+	}
+
+	std::vector<float> cube_vertices = woman.GetVertices();
+	std::vector<float> cube_vertices1 =
 	{
 		// X     Y     Z     NX    NY    NZ    U     V    
 		// FRONT SIDE
@@ -343,13 +373,6 @@ int main()
 		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
 	};
 
-	Model woman("res/Woman/091_W_Aya_100K.obj");
-	if (!woman.Load())
-	{
-		std::cerr << "Failed to load model\n";
-		glfwTerminate();
-		return -1;
-	}
 
 	unsigned cube_vao;
 	glGenVertexArrays(1, &cube_vao);
@@ -388,12 +411,13 @@ int main()
 	phong_shader_material_texture.SetUniform1f("uFlashLight.OuterCutOff", glm::cos(glm::radians(30.0f)));
 
 	// Materials
+	phong_shader_material_texture.SetUniform1f("uMaterial.Ka", 1); // *** Pre nije bilo tu vidi cemu sluzi
 	phong_shader_material_texture.SetUniform1i("uMaterial.Kd", 0);
 	phong_shader_material_texture.SetUniform1i("uMaterial.Ks", 1);
-	phong_shader_material_texture.SetUniform1f("uMaterial.Shininess", 1);
+	phong_shader_material_texture.SetUniform1f("uMaterial.Shininess", 128);
 
 	// Diffuse texture
-	unsigned rock_diffuse_texture = Texture::LoadImageToTexture("res/rock.jpg");
+	unsigned rock_diffuse_texture = Texture::LoadImageToTexture("res/test.png");
 
 	// Start values of variables
 	Shader* current_shader = &phong_shader_material_texture;
@@ -423,7 +447,7 @@ int main()
 		glm::vec3 direction(nx, ny, nz);
 
 		// Normalize the direction vector
-		direction = glm::normalize(direction);
+		direction = normalize(direction);
 
 		glm::vec3 scaled_direction = 0.5f * direction;
 		glm::vec3 end_point = start_point + scaled_direction;
@@ -450,63 +474,63 @@ int main()
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
-	std::vector<float> averaged_normal_vertices;
+	//std::vector<float> averaged_normal_vertices;
 
-	// Calculate averaged normals
-	for (size_t i = 0; i < cube_vertices.size(); i += 8) {
-		float start_x = cube_vertices[i];
-		float start_y = cube_vertices[i + 1];
-		float start_z = cube_vertices[i + 2];
-		glm::vec3 averaged_normal(0.0f);
-		std::vector<glm::vec3> added;
+	//// Calculate averaged normals
+	//for (size_t i = 0; i < cube_vertices.size(); i += 8) {
+	//	float start_x = cube_vertices[i];
+	//	float start_y = cube_vertices[i + 1];
+	//	float start_z = cube_vertices[i + 2];
+	//	glm::vec3 averaged_normal(0.0f);
+	//	std::vector<glm::vec3> added;
 
-		// Calculate the averaged normal by summing up normals with the same starting point
-		for (size_t j = 0; j < cube_vertices.size(); j += 8) {
-			float current_x = cube_vertices[j];
-			float current_y = cube_vertices[j + 1];
-			float current_z = cube_vertices[j + 2];
-			float current_nx = cube_vertices[j + 3];
-			float current_ny = cube_vertices[j + 4];
-			float current_nz = cube_vertices[j + 5];
+	//	// Calculate the averaged normal by summing up normals with the same starting point
+	//	for (size_t j = 0; j < cube_vertices.size(); j += 8) {
+	//		float current_x = cube_vertices[j];
+	//		float current_y = cube_vertices[j + 1];
+	//		float current_z = cube_vertices[j + 2];
+	//		float current_nx = cube_vertices[j + 3];
+	//		float current_ny = cube_vertices[j + 4];
+	//		float current_nz = cube_vertices[j + 5];
 
-			if (start_x == current_x && start_y == current_y && start_z == current_z) {
-				glm::vec3 current_normal(current_nx, current_ny, current_nz);
-				if (!containsElement(current_normal, added)) {
-					averaged_normal += current_normal;
-					added.push_back(current_normal);
-				}
-			}
-		}
+	//		if (start_x == current_x && start_y == current_y && start_z == current_z) {
+	//			glm::vec3 current_normal(current_nx, current_ny, current_nz);
+	//			if (!containsElement(current_normal, added)) {
+	//				averaged_normal += current_normal;
+	//				added.push_back(current_normal);
+	//			}
+	//		}
+	//	}
 
-		if (averaged_normal != glm::vec3(0.0f)) {
-			averaged_normal = glm::normalize(averaged_normal);
+	//	if (averaged_normal != glm::vec3(0.0f)) {
+	//		averaged_normal = glm::normalize(averaged_normal);
 
-			glm::vec3 scaled_direction = 0.5f * averaged_normal;
-			glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
+	//		glm::vec3 scaled_direction = 0.5f * averaged_normal;
+	//		glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
 
-			averaged_normal_vertices.push_back(start_x);
-			averaged_normal_vertices.push_back(start_y);
-			averaged_normal_vertices.push_back(start_z);
-			averaged_normal_vertices.push_back(end_point.x);
-			averaged_normal_vertices.push_back(end_point.y);
-			averaged_normal_vertices.push_back(end_point.z);
-		}
-	}
+	//		averaged_normal_vertices.push_back(start_x);
+	//		averaged_normal_vertices.push_back(start_y);
+	//		averaged_normal_vertices.push_back(start_z);
+	//		averaged_normal_vertices.push_back(end_point.x);
+	//		averaged_normal_vertices.push_back(end_point.y);
+	//		averaged_normal_vertices.push_back(end_point.z);
+	//	}
+	//}
 
-	unsigned averaged_normal_lines_vao;
-	glGenVertexArrays(1, &averaged_normal_lines_vao);
-	glBindVertexArray(averaged_normal_lines_vao);
+	//unsigned averaged_normal_lines_vao;
+	//glGenVertexArrays(1, &averaged_normal_lines_vao);
+	//glBindVertexArray(averaged_normal_lines_vao);
 
-	unsigned averaged_normal_lines_vbo;
-	glGenBuffers(1, &averaged_normal_lines_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, averaged_normal_lines_vbo);
-	glBufferData(GL_ARRAY_BUFFER, averaged_normal_vertices.size() * sizeof(float), averaged_normal_vertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
-	glEnableVertexAttribArray(0);
+	//unsigned averaged_normal_lines_vbo;
+	//glGenBuffers(1, &averaged_normal_lines_vbo);
+	//glBindBuffer(GL_ARRAY_BUFFER, averaged_normal_lines_vbo);
+	//glBufferData(GL_ARRAY_BUFFER, averaged_normal_vertices.size() * sizeof(float), averaged_normal_vertices.data(), GL_STATIC_DRAW);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+	//glEnableVertexAttribArray(0);
 
-	// Unbind VAO and VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
+	//// Unbind VAO and VBO
+	//glBindBuffer(GL_ARRAY_BUFFER, 0);
+	//glBindVertexArray(0);
 
 
 
@@ -515,7 +539,7 @@ int main()
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
-	io.Fonts->AddFontFromFileTTF("res/FreeSans-LrmZ.ttf", 16);
+	io.Fonts->AddFontFromFileTTF("res/FreeSans-LrmZ.ttf", 14);
 	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
 
 	ImGui_ImplGlfwGL3_Init(window, true);
@@ -523,6 +547,28 @@ int main()
 	// Setup style
 	ImGui::StyleColorsDark();
 
+
+	glm::vec3 material_ka(0, 0, 0);
+	glm::vec3 material_kd(0, 0, 0);
+	glm::vec3 material_ks(0, 0, 0);
+	float Shininess = 0;
+
+	/// joj
+	auto tacke = woman.GetVertices();
+	unsigned tacke_vao;
+	glGenVertexArrays(1, &tacke_vao);
+	glBindVertexArray(tacke_vao);
+
+	unsigned tacke_vbo;
+	glGenBuffers(1, &tacke_vbo);
+	glBindBuffer(GL_ARRAY_BUFFER, tacke_vbo);
+	glBufferData(GL_ARRAY_BUFFER, tacke.size() * sizeof(float), tacke.data(), GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+	glEnableVertexAttribArray(0);
+
+	// Unbind VAO and VBO
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindVertexArray(0);
 
 
 
@@ -533,7 +579,7 @@ int main()
 		handle_input(&state);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glUseProgram(current_shader->GetId());
-		current_shader->SetProjection(glm::perspective(70.0f, static_cast<float>(window_width) / static_cast<float>(window_height), 0.1f, 100.0f));
+		current_shader->SetProjection(glm::perspective(70.0f, static_cast<float>(window_width) / static_cast<float>(window_height), 0.1f, 10000.0f));
 		current_shader->SetView(glm::lookAt(fps_camera.GetPosition(), fps_camera.GetTarget(), fps_camera.GetUp()));
 		current_shader->SetUniform3f("uViewPos", fps_camera.GetPosition());
 		current_shader->SetModel(model_matrix);
@@ -567,6 +613,7 @@ int main()
 		if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
 		{
 			state.enable_mouse_callback = false;
+
 		}
 		else
 		{
@@ -620,7 +667,7 @@ int main()
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
 			break;
 		case 6:
-			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
+		//	mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
 			break;
 		case 7:
 			glActiveTexture(GL_TEXTURE0);
@@ -631,11 +678,22 @@ int main()
 		case 8:
 
 			break;
-
-
 		default:
 			break;
 		}
+
+		//current_shader->SetUniform1i("uIsPureColor", 1);
+		//current_shader->SetUniform3f("uColor", glm::vec3(0.7f));
+		//constexpr float desired_point_size = 2.0f;
+		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+		//glPointSize(desired_point_size);
+		//glBindVertexArray(tacke_vao);
+		//glDrawArrays(GL_TRIANGLES, 0, tacke.size()/2);
+		//glBindVertexArray(0);
+		//glPointSize(1.0f);
+		//current_shader->SetUniform1i("uIsPureColor", 0);
+
+
 
 
 		glBindVertexArray(0);
@@ -648,19 +706,15 @@ int main()
 		{
 
 			ImGui_ImplGlfwGL3_NewFrame();
-			float margin = 0.05f;
+			float margin_precentage = 0.025f;
+			int marginLeft = static_cast<int>(margin_precentage * window_width);
+			int marginTop = static_cast<int>(margin_precentage * window_height);
+			int marginBottom = static_cast<int>((0.8 - margin_precentage) * window_height);
+			int marginRight = static_cast<int>((1 - margin_precentage) * window_width);
+			ImGui::SetNextWindowPos(ImVec2(marginLeft, marginTop), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
 
-			int marginLeft = static_cast<int>(margin * window_width);  // 20% of screen width
-			int marginTop = static_cast<int>(margin * window_height); // 20% of screen height
-
-
-			ImGui::SetNextWindowPos(ImVec2(static_cast<float>(marginLeft), static_cast<float>(marginTop)));
-
-			ImGui::Begin("Modes", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing);
-
+			ImGui::Begin("Modes", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoCollapse);
 			ImGui::Text("Selected mode:");
-
-
 			ImVec4 text_color(0.0f, 1.0f, 0.0f, 1.0f); // Green color
 			const char* modesText[] = {
 		"Mode 01 - Vertices",
@@ -671,7 +725,7 @@ int main()
 		"Mode 06 - Averaged normals",
 		"Mode 07 - Shading",
 		"Mode 08 - Texture",
-		// Add more modes here...
+
 			};
 
 			for (int i = 0; i < std::size(modesText); ++i)
@@ -686,17 +740,18 @@ int main()
 				}
 			}
 			ImGui::Separator();
+			ImGui::Separator();
 
 			text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
 			const char* shadingText[] = {
+		"Flat",
 		"Gouraud",
 		"Phong",
-		"Bling-Phong",
 			};
 			ImGui::Text("Selected shading type:");
-			for (int i = 0; i < std::size(shadingText); ++i)
+			for (int i = FLAT; i <= PHONG; ++i)
 			{
-				if (state.mode == i + 1)
+				if (state.shading_mode == i)
 				{
 					ImGui::TextColored(text_color, shadingText[i]);
 				}
@@ -705,34 +760,140 @@ int main()
 					ImGui::Text(shadingText[i]);
 				}
 			}
+			float test = 0;
+			ImVec4 sliderColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			ImVec4 activeSliderColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 			ImGui::Separator();
-			ImGui::Text("Material parameters:");
+			ImGui::Separator();
+			ImGui::Text("Material components");
+			ImGui::Text("Ambient:");
+
+			ImVec4 frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Ambient Red", &material_ka.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Ambient Green", &material_ka.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Ambient Blue", &material_ka.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Diffuse:");
+
+			frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Diffuse Red", &material_kd.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Diffuse Green", &material_kd.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Diffuse Blue", &material_kd.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Specular:");
+
+			frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Specular Red", &material_ks.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Specular Green", &material_ks.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Specular Blue", &material_ks.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Shininess:");
+			frameBgColor = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			ImGui::SliderFloat("Strength", &Shininess, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+
 			ImGui::End();
 
 
-			float screenWidth = static_cast<float>(ImGui::GetIO().DisplaySize.x);
-			float screenHeight = static_cast<float>(ImGui::GetIO().DisplaySize.y);
-			float marginX = 0.05f * screenWidth;
-			float marginY = 0.05f * screenHeight;
-
-			// Set the position of the window with the calculated margin
-			ImGui::SetNextWindowPos(ImVec2(marginX, screenHeight - marginY), ImGuiCond_Always, ImVec2(0.0f, 1.0f));
-
-			// Begin the ImGui window
-			ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize);
+			ImGui::SetNextWindowPos(ImVec2(marginRight, marginTop), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+			ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
 			ImGui::Text("GUI toggle - Q");
 			ImGui::Text("Movement - W A S D");
-			ImGui::Text("Looking - Mouse or arrow keys");
+			ImGui::Text("Up / Down - Space / C");
+			ImGui::Text("Camera - Mouse");
 			ImGui::Text("Flashlight toggle - F");
 			ImGui::Text("Disable mouse - E (hold)");
 			ImGui::Separator();
 			ImGui::Text("Switching modes - 1 2 3 4 5 6 7 8");
 			ImGui::Separator();
 			ImGui::Text("Switching shading type:");
-			ImGui::Text("I (Gouraud):");
-			ImGui::Text("O (Phong):");
-			ImGui::Text("O (Bling-Phong):");
+			ImGui::Text("Flat - I");
+			ImGui::Text("Gouraud - O");
+			ImGui::Text("Phong - P");
+			ImGui::End();
+
+
+			ImGui::SetNextWindowPos(ImVec2(marginRight, marginBottom), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
+
+			ImGui::Begin("Information", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+			ImGui::Text("TBAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
+
 			ImGui::End();
 
 			ImGui::Render();

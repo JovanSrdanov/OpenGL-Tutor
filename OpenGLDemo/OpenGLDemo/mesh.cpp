@@ -92,9 +92,7 @@ Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::str
     glBindVertexArray(0);
 }
 std::vector<float> Mesh::GetVertices() const {
-    std::vector<float> vertices;
-    for (const auto& vertex : mVertices) {
-        vertices.push_back(vertex);
-    }
-    return vertices;
+ 
+
+    return mVertices;
 }

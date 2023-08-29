@@ -24,6 +24,7 @@ struct DirectionalLight {
 };
 
 struct Material {
+	sampler2D Ka;
 	sampler2D Kd;
 	sampler2D Ks;
 	float Shininess;
@@ -58,7 +59,7 @@ void main() {
 	float DirDiffuse = max(dot(vWorldSpaceNormal, DirLightVector), 0.0f);
 	vec3 DirReflectDirection = reflect(-DirLightVector, vWorldSpaceNormal);
 	float DirSpecular = pow(max(dot(ViewDirection, DirReflectDirection), 0.0f), uMaterial.Shininess);
-	vec3 DirAmbientColor = uDirLight.Ka * vec3(texture(uMaterial.Kd, UV));
+	vec3 DirAmbientColor = uDirLight.Ka * vec3(texture(uMaterial.Ka, UV));
 	vec3 DirDiffuseColor = uDirLight.Kd * DirDiffuse * vec3(texture(uMaterial.Kd, UV));
 	vec3 DirSpecularColor = uDirLight.Ks * DirSpecular * vec3(texture(uMaterial.Ks, UV));
 	vec3 DirColor = DirAmbientColor + DirDiffuseColor + DirSpecularColor;
@@ -69,7 +70,7 @@ void main() {
 	vec3 PtReflectDirection = reflect(-PtLightVector, vWorldSpaceNormal);
 	float PtSpecular = pow(max(dot(ViewDirection, PtReflectDirection), 0.0f), uMaterial.Shininess);
 
-	vec3 PtAmbientColor = uSunLight.Ka * vec3(texture(uMaterial.Kd, UV));
+	vec3 PtAmbientColor = uSunLight.Ka * vec3(texture(uMaterial.Ka, UV));
 	vec3 PtDiffuseColor = PtDiffuse * uSunLight.Kd * vec3(texture(uMaterial.Kd, UV));
 	vec3 PtSpecularColor = PtSpecular * uSunLight.Ks * vec3(texture(uMaterial.Ks, UV));
 
@@ -85,7 +86,7 @@ void main() {
 	vec3 SpotReflectDirection3 = reflect(-SpotlightVector3, vWorldSpaceNormal);
 	float SpotSpecular3 = pow(max(dot(ViewDirection, SpotReflectDirection3), 0.0f), uMaterial.Shininess);
 
-	vec3 SpotAmbientColor3 = uFlashLight.Ka * vec3(texture(uMaterial.Kd, UV));
+	vec3 SpotAmbientColor3 = uFlashLight.Ka * vec3(texture(uMaterial.Ka, UV));
 	vec3 SpotDiffuseColor3 = SpotDiffuse3 * uFlashLight.Kd * vec3(texture(uMaterial.Kd, UV));
 	vec3 SpotSpecularColor3 = SpotSpecular3 * uFlashLight.Ks * vec3(texture(uMaterial.Ks, UV));
 
