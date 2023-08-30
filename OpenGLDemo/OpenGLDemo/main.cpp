@@ -206,7 +206,7 @@ void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_
 void mode_polygon_lines(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
 {
 	current_shader->SetUniform1i("uIsPureColor", 1);
-	current_shader->SetUniform3f("uColor", glm::vec3(0.1f));
+	current_shader->SetUniform3f("uColor", glm::vec3(0.91f));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
@@ -234,8 +234,6 @@ void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, cons
 
 void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
 {
-	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
-
 	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -257,6 +255,30 @@ void mode_averaged_normals(const Shader* current_shader, const std::vector<float
 	glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+	current_shader->SetUniform1i("uIsPureColor", 0);
+}
+
+void mode_render_vertices(Model model, Shader* current_shader, glm::vec3 color)
+{
+	current_shader->SetUniform1i("uIsPureColor", 1);
+	current_shader->SetUniform3f("uColor", color);
+	model.RenderVertices();
+	current_shader->SetUniform1i("uIsPureColor", 0);
+}
+
+void mode_render_triangles(Model model, Shader* current_shader, glm::vec3 color)
+{
+	current_shader->SetUniform1i("uIsPureColor", 1);
+	current_shader->SetUniform3f("uColor", color);
+	model.RenderTriangles();
+	current_shader->SetUniform1i("uIsPureColor", 0);
+}
+
+void mode_render_filled_triangles(Model model, Shader* current_shader, glm::vec3 color)
+{
+	current_shader->SetUniform1i("uIsPureColor", 1);
+	current_shader->SetUniform3f("uColor", color);
+	model.RenderFilledTriangles();
 	current_shader->SetUniform1i("uIsPureColor", 0);
 }
 
@@ -315,15 +337,16 @@ int main()
 	glEnable(GL_CULL_FACE);
 
 
-	Model woman("res/Woman/091_W_Aya_100K.obj");
-	if (!woman.Load())
+	//Model model("res/Woman/091_W_Aya_100K.obj");
+	Model model("res/Heart_v1_L3.123cee89a2ce-bf99-486a-93b2-29faa8963112/12190_Heart_v1_L3.obj");
+	if (!model.Load())
 	{
 		std::cerr << "Failed to load model\n";
 		glfwTerminate();
 		return -1;
 	}
 
-	std::vector<float> cube_vertices = woman.GetVertices();
+	std::vector<float> cube_vertices = model.GetVertices();
 	std::vector<float> cube_vertices1 =
 	{
 		// X     Y     Z     NX    NY    NZ    U     V    
@@ -425,6 +448,7 @@ int main()
 	bool is_q_key_pressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
+	model_matrix = glm::rotate(model_matrix, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	float background_color = 0.01f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
@@ -447,7 +471,7 @@ int main()
 		// Normalize the direction vector
 		direction = normalize(direction);
 
-		glm::vec3 scaled_direction = 5.0f * direction;
+		glm::vec3 scaled_direction = 0.5f * direction;
 		glm::vec3 end_point = start_point + scaled_direction;
 
 		normal_line_vertices.push_back(start_point.x);
@@ -600,7 +624,7 @@ int main()
 	float Shininess = 0;
 
 	/// joj
-	auto tacke = woman.GetVertices();
+	auto tacke = model.GetVertices();
 	unsigned tacke_vao;
 	glGenVertexArrays(1, &tacke_vao);
 	glBindVertexArray(tacke_vao);
@@ -693,23 +717,29 @@ int main()
 		current_shader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform3f("uSunLight.Position", point_light_position_sun);
 		current_shader->SetUniform1f("uIsDrawingLines", 0);
-		model_matrix = glm::mat4(1.0f);
 
 		switch (state.mode)
 		{
 		case 1:
-			mode_vertices(cube_vertices, cube_vao, current_shader);
+			mode_render_vertices(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 2:
-			mode_polygon_lines(cube_vertices, cube_vao, current_shader);
+			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 3:
-			mode_polygon_filled(cube_vertices, cube_vao, current_shader);
+			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
 			break;
 		case 4:
-			mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
+			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
+			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 5:
+			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
+			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
+			//current_shader->SetUniform1i("uIsPureColor", 1);
+			//current_shader->SetUniform3f("uColor", glm::vec3(0.0f,1.0f,0.0f));
+			//model.RenderNormals();
+			//current_shader->SetUniform1i("uIsPureColor", 0);
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
 			break;
 		case 6:
@@ -722,6 +752,13 @@ int main()
 			glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
 			break;
 		case 8:
+			//mode_polygon_lines(cube_vertices, cube_vao, current_shader);
+
+			current_shader->SetUniform1i("uIsPureColor", 1);
+			current_shader->SetUniform3f("uColor", glm::vec3(1.0f));
+			model.RenderWithTexture();
+			current_shader->SetUniform1i("uIsPureColor", 0);
+
 
 			break;
 		default:

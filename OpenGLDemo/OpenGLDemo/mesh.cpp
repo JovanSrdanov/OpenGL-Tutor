@@ -1,11 +1,14 @@
 #include "mesh.hpp"
 
+#include <glm/vec3.hpp>
+#include <glm/detail/func_geometric.inl>
+
 Mesh::Mesh(const aiMesh* mesh, const aiMaterial* material, const std::string &resPath) {
     processMesh(mesh, material, resPath);
 }
 
 void
-Mesh::Render() const {
+Mesh::RenderWithTexture() const {
     glBindVertexArray(mVAO);
 
     if (mDiffuseTexture) {
@@ -28,6 +31,51 @@ Mesh::Render() const {
     glDrawArrays(GL_TRIANGLES, 0, mVertexCount);
     glBindVertexArray(0);
 }
+void
+Mesh::RenderTriangles() const {
+    glBindVertexArray(mVAO);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if (mIndexCount) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+        glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindVertexArray(0);
+}
+void
+Mesh::RenderFilledTriangles() const {
+    glBindVertexArray(mVAO);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    if (mIndexCount) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+        glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+    glBindVertexArray(0);
+}
+
+void
+Mesh::RenderVertices() const {
+    glBindVertexArray(mVAO);
+    if (mIndexCount) {
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO);
+        glDrawElements(GL_POINTS, mIndexCount, GL_UNSIGNED_INT, (void*)0);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    }
+    glBindVertexArray(0);
+}
+
+void
+Mesh::RenderNormals() const {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(normal_lines_vao);
+    glDrawArrays(GL_LINES, 0, normal_line_vertices.size() / 3);
+    glBindVertexArray(0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
+
 
 unsigned
 Mesh::loadMeshTexture(const aiMaterial* material, const std::string& resPath, aiTextureType type) {
@@ -90,9 +138,48 @@ Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::str
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     }
     glBindVertexArray(0);
+
+ 
+    for (size_t i = 0; i < mVertices.size(); i += 8) {
+        float x = mVertices[i];
+        float y = mVertices[i + 1];
+        float z = mVertices[i + 2];
+        float nx = mVertices[i + 3];
+        float ny = mVertices[i + 4];
+        float nz = mVertices[i + 5];
+
+        // Calculate the endpoints of the normal line
+        glm::vec3 start_point(x, y, z);
+        glm::vec3 direction(nx, ny, nz);
+
+        // Normalize the direction vector
+        direction = normalize(direction);
+
+        glm::vec3 scaled_direction = 0.5f * direction;
+        glm::vec3 end_point = start_point + scaled_direction;
+
+        normal_line_vertices.push_back(start_point.x);
+        normal_line_vertices.push_back(start_point.y);
+        normal_line_vertices.push_back(start_point.z);
+        normal_line_vertices.push_back(end_point.x);
+        normal_line_vertices.push_back(end_point.y);
+        normal_line_vertices.push_back(end_point.z);
+    }
+   
+    glGenVertexArrays(1, &normal_lines_vao);
+    glBindVertexArray(normal_lines_vao);
+
+    glGenBuffers(1, &normal_lines_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, normal_lines_vbo);
+    glBufferData(GL_ARRAY_BUFFER, normal_line_vertices.size() * sizeof(float), normal_line_vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+    glEnableVertexAttribArray(0);
+
+    // Unbind VAO and VBO
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
 }
 std::vector<float> Mesh::GetVertices() const {
- 
-
     return mVertices;
 }

@@ -26,10 +26,38 @@ Model::Load() {
 }
 
 void
-Model::Render() {
+Model::RenderWithTexture() {
     for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
         Mesh &Mesh = mMeshes[MeshIdx];
-        mMeshes[MeshIdx].Render();
+        mMeshes[MeshIdx].RenderWithTexture();
+    }
+}
+
+void
+Model::RenderVertices() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderVertices();
+    }
+}
+void
+Model::RenderTriangles() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderTriangles();
+    }
+}void
+Model::RenderFilledTriangles() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderFilledTriangles();
+    }
+}
+void
+Model::RenderNormals() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderNormals();
     }
 }
 std::vector<float> Model::GetVertices() const {

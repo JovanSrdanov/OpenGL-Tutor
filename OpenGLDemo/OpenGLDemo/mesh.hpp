@@ -11,6 +11,9 @@ class Mesh {
 private:
 	unsigned mVAO;
 	unsigned mVBO;
+	unsigned normal_lines_vao;
+	unsigned normal_lines_vbo;
+	std::vector<float> normal_line_vertices;
 	unsigned mEBO;
 	unsigned mVertexCount;
 	unsigned mIndexCount;
@@ -23,6 +26,10 @@ public:
 	std::vector<unsigned> mIndices;
 	std::vector<float> mVertices;
 	Mesh(const aiMesh* mesh, const aiMaterial* material, const std::string& resPath);
-	void Render() const;
+	void RenderWithTexture() const;
+	void RenderVertices() const;
+	void RenderTriangles() const;
+	void RenderFilledTriangles() const;
+	void RenderNormals() const;
 	std::vector<float> GetVertices() const;
 };
