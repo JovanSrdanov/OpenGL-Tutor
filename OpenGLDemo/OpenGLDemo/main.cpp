@@ -40,7 +40,7 @@ struct engine_state
 	input* m_input;
 	Camera* m_camera;
 	double m_dt;
-	int mode = 1;
+	int mode = 5;
 	double last_mouse_x = 0;
 	double last_mouse_y = 0;
 	bool first_mouse = true;
@@ -235,7 +235,7 @@ void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, cons
 void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
 {
 	current_shader->SetUniform1i("uIsPureColor", 1);
-	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
+	current_shader->SetUniform3f("uColor", glm::vec3(0.0, 0.5, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(normal_lines_vao);
 	glDrawArrays(GL_LINES, 0, normal_line_vertices.size() / 3);
