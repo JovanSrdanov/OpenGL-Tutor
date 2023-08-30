@@ -206,7 +206,7 @@ void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_
 void mode_polygon_lines(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
 {
 	current_shader->SetUniform1i("uIsPureColor", 1);
-	current_shader->SetUniform3f("uColor", glm::vec3(0.9f));
+	current_shader->SetUniform3f("uColor", glm::vec3(0.1f));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
@@ -425,7 +425,7 @@ int main()
 	bool is_q_key_pressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
-	float background_color = 0.1f;
+	float background_color = 0.01f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
 	//////////////////////////////////////////////////////////////////////////////////////////
@@ -447,7 +447,7 @@ int main()
 		// Normalize the direction vector
 		direction = normalize(direction);
 
-		glm::vec3 scaled_direction = 3.5f * direction;
+		glm::vec3 scaled_direction = 5.0f * direction;
 		glm::vec3 end_point = start_point + scaled_direction;
 
 		normal_line_vertices.push_back(start_point.x);
@@ -489,11 +489,11 @@ int main()
 	else {
 		// Calculate averaged normals and populate the vector
 		std::vector<glm::vec3> added_to_vertices;;
-		for (size_t i = 0; i < cube_vertices.size(); i += 6) {
+		for (size_t i = 0; i < cube_vertices.size(); i += 8) {
 			glm::vec3 averaged_normal(0.0f);
 			std::vector<glm::vec3> added_to_current_normal_calculation;
 
-			if (i % 60000 == 0)
+			if (i % 8000 == 0)
 			{
 				std::cout << i << "\n";
 				std::cout << cube_vertices.size() << "\n";
@@ -513,7 +513,7 @@ int main()
 			}
 
 			// Calculate the averaged normal by summing up normals with the same starting point
-			for (size_t j = 0; j < cube_vertices.size(); j += 6) {
+			for (size_t j = i; j < cube_vertices.size(); j += 8) {
 				float current_x = cube_vertices[j];
 				float current_y = cube_vertices[j + 1];
 				float current_z = cube_vertices[j + 2];
@@ -535,7 +535,7 @@ int main()
 				averaged_normal = static_cast<float>(1.00 / added_to_current_normal_calculation.size()) * averaged_normal;
 				averaged_normal = glm::normalize(averaged_normal);
 
-				glm::vec3 scaled_direction = 3.5f * averaged_normal;
+				glm::vec3 scaled_direction = 5.0f * averaged_normal;
 				glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
 
 				averaged_normal_vertices.push_back(start_x);
@@ -547,10 +547,7 @@ int main()
 
 
 			}
-			if (averaged_normal_vertices.size() > 4000 * 6) {
-
-				break;
-			}
+		
 		}
 
 		// Save the calculated data to the file
