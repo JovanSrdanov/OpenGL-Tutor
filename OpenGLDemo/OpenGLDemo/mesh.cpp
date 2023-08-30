@@ -112,7 +112,7 @@ Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::str
         mIndices.push_back(Face.mIndices[2]);
     }
 
-    mVertexCount = mVertices.size() / 6;
+    mVertexCount = mVertices.size() / 8;
     mIndexCount = mIndices.size();
 
     mDiffuseTexture = loadMeshTexture(material, resPath, aiTextureType_DIFFUSE);

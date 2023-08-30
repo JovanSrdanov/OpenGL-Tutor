@@ -735,28 +735,21 @@ int main()
 		case 5:
 			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
 			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
-			//current_shader->SetUniform1i("uIsPureColor", 1);
-			//current_shader->SetUniform3f("uColor", glm::vec3(0.0f,1.0f,0.0f));
-			//model.RenderNormals();
-			//current_shader->SetUniform1i("uIsPureColor", 0);
+
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
 			break;
 		case 6:
 			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
 			break;
 		case 7:
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, rock_diffuse_texture);
-			glBindVertexArray(cube_vao);
-			glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
+		
+		
 			break;
 		case 8:
-			//mode_polygon_lines(cube_vertices, cube_vao, current_shader);
-
-			current_shader->SetUniform1i("uIsPureColor", 1);
-			current_shader->SetUniform3f("uColor", glm::vec3(1.0f));
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, rock_diffuse_texture);
 			model.RenderWithTexture();
-			current_shader->SetUniform1i("uIsPureColor", 0);
+		
 
 
 			break;
