@@ -5,9 +5,9 @@ Camera::Camera() {
     mWorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
     mRight = glm::vec3(0.0f, 0.0f, 0.0f);
     mVelocity = glm::vec3(0.0f);
-    mPitch = -20.0f;
+    mPitch = 20.0f;
     mYaw = 45.0f;
-    mMoveSpeed = 130.0f;
+    mMoveSpeed = 330.0f;
     mLookSpeed = 70.0f;
     mPlayerHeight = 2.0f;
     updateVectors();
