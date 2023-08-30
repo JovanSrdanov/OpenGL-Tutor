@@ -338,7 +338,7 @@ int main()
 
 
 	//Model model("res/Woman/091_W_Aya_100K.obj");
-	Model model("res/Heart_v1_L3.123cee89a2ce-bf99-486a-93b2-29faa8963112/12190_Heart_v1_L3.obj");
+	Model model("res/moto_simple_1.obj");
 	if (!model.Load())
 	{
 		std::cerr << "Failed to load model\n";
@@ -448,7 +448,6 @@ int main()
 	bool is_q_key_pressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
-	model_matrix = glm::rotate(model_matrix, glm::radians(-90.0f), glm::vec3(1, 0, 0));
 	float background_color = 0.01f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
