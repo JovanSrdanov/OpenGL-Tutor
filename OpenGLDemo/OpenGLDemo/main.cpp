@@ -194,36 +194,35 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 
 void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", glm::vec3(0.9f));
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_POINTS, 0, cube_vertices.size() / 8);
 	glBindVertexArray(0);
 	glPointSize(1.0f);
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_polygon_lines(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", glm::vec3(0.91f));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_polygon_filled(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", glm::vec3(0.4f));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 	glBindVertexArray(cube_vao);
 	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
 	glBindVertexArray(0);
-	current_shader->SetUniform1i("uIsPureColor", 0);
 }
 
 void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
@@ -234,52 +233,51 @@ void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, cons
 
 void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", glm::vec3(0.0, 0.5, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(normal_lines_vao);
 	glDrawArrays(GL_LINES, 0, normal_line_vertices.size() / 3);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const unsigned cube_vao)
 {
 
 	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(averaged_normal_lines_vao);
 	glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_render_vertices(Model model, Shader* current_shader, glm::vec3 color)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderVertices();
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_render_triangles(Model model, Shader* current_shader, glm::vec3 color)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
+
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderTriangles();
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 void mode_render_filled_triangles(Model model, Shader* current_shader, glm::vec3 color)
 {
-	current_shader->SetUniform1i("uIsPureColor", 1);
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderFilledTriangles();
-	current_shader->SetUniform1i("uIsPureColor", 0);
+
 }
 
 int main()
@@ -290,17 +288,14 @@ int main()
 		std::cerr << "Failed to init glfw" << std::endl;
 		return -1;
 	}
-
 	const std::string window_title = "OpenGLDemo";
 	int window_width = glfwGetVideoMode(glfwGetPrimaryMonitor())->width;
 	int window_height = glfwGetVideoMode(glfwGetPrimaryMonitor())->height;
-
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
 	glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 16);
-
 	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), nullptr, nullptr);
 	if (!window)
 	{
@@ -310,9 +305,7 @@ int main()
 	}
 	glfwMakeContextCurrent(window);
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_HIDDEN); // Hide the cursor
-
 	glEnable(GL_MULTISAMPLE);
-
 	GLenum error = glewInit();
 	if (error != GLEW_OK)
 	{
@@ -320,22 +313,17 @@ int main()
 		glfwTerminate();
 		return -1;
 	}
-
 	engine_state state;
 	Camera fps_camera;
 	input user_input;
 	state.m_camera = &fps_camera;
 	state.m_input = &user_input;
 	glfwSetWindowUserPointer(window, &state);
-
 	glfwSetErrorCallback(error_callback);
 	glfwSetFramebufferSizeCallback(window, frame_buffer_size_callback);
-	// Inside the main function, add this line to set the mouse callback
 	glfwSetCursorPosCallback(window, mouse_callback);
-
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-
 
 	//Model model("res/Woman/091_W_Aya_100K.obj");
 	Model model("res/moto_simple_1.obj");
@@ -412,6 +400,7 @@ int main()
 	glBindVertexArray(0);
 
 	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
+	Shader color_only("shaders/basic.vert", "shaders/color.frag");
 	glUseProgram(phong_shader_material_texture.GetId());
 
 	phong_shader_material_texture.SetUniform3f("uColor", glm::vec3(1, 1, 1));
@@ -720,25 +709,30 @@ int main()
 		switch (state.mode)
 		{
 		case 1:
+			current_shader = &color_only;
 			mode_render_vertices(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 2:
+			current_shader = &color_only;
 			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 3:
+			current_shader = &color_only;
 			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
 			break;
 		case 4:
+			current_shader = &color_only;
 			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
 			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
 			break;
 		case 5:
+			current_shader = &color_only;
 			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
 			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
-
 			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
 			break;
 		case 6:
+			current_shader = &color_only;
 			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
 			break;
 		case 7:
@@ -746,6 +740,7 @@ int main()
 		
 			break;
 		case 8:
+			current_shader = &phong_shader_material_texture;
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, rock_diffuse_texture);
 			model.RenderWithTexture();

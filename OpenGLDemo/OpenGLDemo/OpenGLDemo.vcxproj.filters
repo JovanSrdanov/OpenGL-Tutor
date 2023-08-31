@@ -22,6 +22,7 @@
     <None Include="shaders\phong_material_texture.frag">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="color.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">
