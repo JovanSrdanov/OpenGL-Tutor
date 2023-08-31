@@ -284,7 +284,7 @@ int main()
 	// Materials
 	phong_shader_material_texture.SetUniform1f("uMaterial.Ka", 1); // *** Check what is it for
 	phong_shader_material_texture.SetUniform1i("uMaterial.Kd", 0);
-	phong_shader_material_texture.SetUniform1i("uMaterial.Ks", 1);
+	phong_shader_material_texture.SetUniform1i("uMaterial.Ks", 0);
 	phong_shader_material_texture.SetUniform1f("uMaterial.Shininess", 128);
 
 	// Diffuse texture
@@ -476,6 +476,7 @@ int main()
 			glm::vec3 pos = fps_camera.GetTarget() - fps_camera.GetPosition();
 			current_shader->SetUniform3f("uFlashLight.Position", glm::vec3(fps_camera.GetPosition()));
 			current_shader->SetUniform3f("uFlashLight.Direction", glm::vec3(pos.x, pos.y, pos.z));
+			current_shader->SetUniform3f("uFlashLight.Ka", glm::vec3(0));
 			current_shader->SetUniform3f("uFlashLight.Kd", glm::vec3(1));
 			current_shader->SetUniform3f("uFlashLight.Ks", glm::vec3(1));
 		}
@@ -486,15 +487,14 @@ int main()
 		}
 
 		current_shader->SetUniform3f("uDirLight.Direction", glm::vec3(0, -0.1, 0));
-		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.68, 0.70, 0.51));
-		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.68, 0.70, 0.51));
-		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1.0f));
-		glm::vec3 point_light_position_sun(15, 5, 0);
+		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.5));
+		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.5));
+		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(0.5));
+		glm::vec3 point_light_position_sun(1115, 5, 0);
 		current_shader->SetUniform1f("uSunLight.Kc", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform3f("uSunLight.Position", point_light_position_sun);
 		current_shader->SetUniform1f("uIsDrawingLines", 0);
-
 
 		switch (state.mode)
 		{
