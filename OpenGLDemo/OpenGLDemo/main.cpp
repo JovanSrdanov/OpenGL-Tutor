@@ -68,8 +68,6 @@ void handle_input(const engine_state* state)
 	if (user_input->move_right) fps_camera->Move(1.0f, 0.0f, state->m_dt);
 	if (user_input->move_down) fps_camera->Move(0.0f, -1.0f, state->m_dt);
 	if (user_input->move_up) fps_camera->Move(0.0f, 1.0f, state->m_dt);
-
-
 	if (user_input->go_up) fps_camera->UpDown(1, state->m_dt);
 	if (user_input->go_down) fps_camera->UpDown(-1, state->m_dt);
 }
@@ -85,34 +83,27 @@ void print_data(Camera cam) {
 };
 
 bool contains_element(const glm::vec3& target, const std::vector<glm::vec3>& added) {
-	return std::find(added.begin(), added.end(), target) != added.end();;
+	return std::find(added.begin(), added.end(), target) != added.end();
 }
 
-
-// Add this function to handle mouse movement
 void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
 {
 	auto* state = static_cast<engine_state*>(glfwGetWindowUserPointer(window));
-
 	if (!state->enable_mouse_callback) {
 		state->last_mouse_x = x_pos;
 		state->last_mouse_y = y_pos;
 		return;
 	}
-
 	if (state->first_mouse)
 	{
 		state->last_mouse_x = x_pos;
 		state->last_mouse_y = y_pos;
 		state->first_mouse = false;
 	}
-
 	const double x_offset = x_pos - state->last_mouse_x;
-	const double y_offset = state->last_mouse_y - y_pos; // reversed since y-coordinates range from bottom to top
-
+	const double y_offset = state->last_mouse_y - y_pos;
 	state->last_mouse_x = x_pos;
 	state->last_mouse_y = y_pos;
-
 	Camera* fps_camera = state->m_camera;
 	constexpr float speed = 0.3f;
 	fps_camera->Rotate(static_cast<float>(x_offset * speed), static_cast<float>(y_offset * speed), state->m_dt);
@@ -121,16 +112,12 @@ void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
 void handle_key_input(GLFWwindow* window, engine_state* state)
 {
 	input* user_input = state->m_input;
-
-
 	user_input->move_left = glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS;
 	user_input->move_right = glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS;
 	user_input->move_up = glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS;
 	user_input->move_down = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
 	user_input->go_up = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	user_input->go_down = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-
-	// Add other key checks here
 
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 	{
@@ -181,69 +168,12 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	{
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
-
-
-	// Add other mode keys here
 }
 
 
-void mode_vertices(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
+void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const glm::vec3 color)
 {
-
-	current_shader->SetUniform3f("uColor", glm::vec3(0.9f));
-	glBindVertexArray(cube_vao);
-	glDrawArrays(GL_POINTS, 0, cube_vertices.size() / 8);
-	glBindVertexArray(0);
-	glPointSize(1.0f);
-
-}
-
-void mode_polygon_lines(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
-{
-
-	current_shader->SetUniform3f("uColor", glm::vec3(0.91f));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBindVertexArray(cube_vao);
-	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
-	glBindVertexArray(0);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-}
-
-void mode_polygon_filled(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
-{
-
-	current_shader->SetUniform3f("uColor", glm::vec3(0.4f));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-	glBindVertexArray(cube_vao);
-	glDrawArrays(GL_TRIANGLES, 0, cube_vertices.size() / 8);
-	glBindVertexArray(0);
-}
-
-void mode_polygon_lines_and_filled(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader)
-{
-	mode_polygon_lines(cube_vertices, cube_vao, current_shader);
-	mode_polygon_filled(cube_vertices, cube_vao, current_shader);
-}
-
-void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_vao, const Shader* current_shader, const std::vector<float>& normal_line_vertices, const unsigned normal_lines_vao)
-{
-
-	current_shader->SetUniform3f("uColor", glm::vec3(0.0, 0.5, 0.00));
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-	glBindVertexArray(normal_lines_vao);
-	glDrawArrays(GL_LINES, 0, normal_line_vertices.size() / 3);
-	glBindVertexArray(0);
-	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-}
-
-void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const unsigned cube_vao)
-{
-
-	//mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
-
-	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
+	current_shader->SetUniform3f("uColor", color);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 	glBindVertexArray(averaged_normal_lines_vao);
 	glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
@@ -252,27 +182,30 @@ void mode_averaged_normals(const Shader* current_shader, const std::vector<float
 
 }
 
-void mode_render_vertices(Model model, Shader* current_shader, glm::vec3 color,float point_size)
+void mode_render_vertices(Model model, const Shader* current_shader, const glm::vec3 color, const float point_size)
 {
 	glPointSize(point_size);
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderVertices();
-
 }
 
-void mode_render_triangles(Model model, Shader* current_shader, glm::vec3 color)
+void mode_render_triangles(Model model, const Shader* current_shader, const glm::vec3 color)
 {
 
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderTriangles();
-
 }
 
-void mode_render_filled_triangles(Model model, Shader* current_shader, glm::vec3 color)
+void mode_render_filled_triangles(Model model, const Shader* current_shader, const glm::vec3 color)
 {
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderFilledTriangles();
+}
 
+void mode_render_normals(Model model, const Shader* current_shader, glm::vec3 all_normals_color)
+{
+	current_shader->SetUniform3f("uColor", glm::vec3(all_normals_color));
+	model.RenderNormals();
 }
 
 int main()
@@ -329,76 +262,9 @@ int main()
 		return -1;
 	}
 
-	std::vector<float> cube_vertices = model.GetVertices();
-	std::vector<float> cube_vertices1 =
-	{
-		// X     Y     Z     NX    NY    NZ    U     V    
-		// FRONT SIDE
-		-0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, // L D
-		 0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // R D
-		-0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // L U
-		 0.5f, -0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 0.0f, // R D
-		 0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, // R U
-		-0.5f,  0.5f, 0.5f, 0.0f, 0.0f, 1.0f, 0.0f, 1.0f, // L U
-		// LEFT SIDE
-		-0.5f, -0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // L D
-		-0.5f, -0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
-		-0.5f,  0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
-		-0.5f, -0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
-		-0.5f,  0.5f,  0.5f, -1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // R U
-		-0.5f,  0.5f, -0.5f, -1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
-		// RIGHT SIDE
-		0.5f, -0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, // L D
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
-		0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
-		0.5f, -0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, // R D
-		0.5f,  0.5f, -0.5f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, // R U
-		0.5f,  0.5f,  0.5f, 1.0f, 0.0f, 0.0f, 0.0f, 1.0f, // L U
-		// BOTTOM SIDE
-		-0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 0.0f, // L D
-		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, // R D
-		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // L U
-		 0.5f, -0.5f, -0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f, // R D
-		 0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 1.0f, 1.0f, // R U
-		-0.5f, -0.5f,  0.5f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, // L U
-		// TOP SIDE
-		-0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, // L D
-		 0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // R D
-		-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // L U
-		 0.5f,  0.5f,  0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 0.0f, // R D
-		 0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, // R U
-		-0.5f,  0.5f, -0.5f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, // L U
-		// BACK SIDE
-		0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, // L D
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, // R D
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
-		-0.5f, -0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 0.0f, // R D
-		-0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 1.0f, 1.0f, // R U
-		 0.5f,  0.5f, -0.5f, 0.0f, 0.0f, -1.0f, 0.0f, 1.0f, // L U
-	};
-
-
-	unsigned cube_vao;
-	glGenVertexArrays(1, &cube_vao);
-	glBindVertexArray(cube_vao);
-	unsigned cube_vbo;
-	glGenBuffers(1, &cube_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, cube_vbo);
-	glBufferData(GL_ARRAY_BUFFER, cube_vertices.size() * sizeof(float), cube_vertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), static_cast<void*>(nullptr));
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(3 * sizeof(float)));
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), reinterpret_cast<void*>(6 * sizeof(float)));
-	glEnableVertexAttribArray(2);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
 	Shader color_only("shaders/basic.vert", "shaders/color.frag");
+	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
 	glUseProgram(phong_shader_material_texture.GetId());
-
-	phong_shader_material_texture.SetUniform3f("uColor", glm::vec3(1, 1, 1));
 
 	// Default for point light (Sun)
 	phong_shader_material_texture.SetUniform3f("uSunLight.Ka", glm::vec3(1.00, 0.97, 0.00));
@@ -416,7 +282,7 @@ int main()
 	phong_shader_material_texture.SetUniform1f("uFlashLight.OuterCutOff", glm::cos(glm::radians(30.0f)));
 
 	// Materials
-	phong_shader_material_texture.SetUniform1f("uMaterial.Ka", 1); // *** Pre nije bilo tu vidi cemu sluzi
+	phong_shader_material_texture.SetUniform1f("uMaterial.Ka", 1); // *** Check what is it for
 	phong_shader_material_texture.SetUniform1i("uMaterial.Kd", 0);
 	phong_shader_material_texture.SetUniform1i("uMaterial.Ks", 1);
 	phong_shader_material_texture.SetUniform1f("uMaterial.Shininess", 128);
@@ -431,23 +297,22 @@ int main()
 	bool is_f_key_pressed = false;
 	bool is_q_key_pressed = false;
 	double start_time;
-	glm::mat4 model_matrix(1.0f);
-	float background_color = 0.0f;
-	float points_and_lines_color = 1.0f;
 	float filled_color = 0.3f;
-	glm::vec3 all_normals_color = glm::vec3(0.7,0.7,0.0);
-	glm::vec3 averaged_normals_ = glm::vec3(0.5,0.5,0.0);
-	
+	float points_and_lines_color = 1.0f;
+	auto all_normals_color = glm::vec3(0.7, 0.7, 0.0);
+	auto averaged_normals_color = glm::vec3(0.5, 0.5, 0.0);
+	glm::mat4 model_matrix(1.0f);
+
+	glm::vec3 material_ka(0, 0, 0);
+	glm::vec3 material_kd(0, 0, 0);
+	glm::vec3 material_ks(0, 0, 0);
+	float shininess = 0;
+
+	float background_color = 0.0f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
-
-
+	std::vector<float> cube_vertices = model.GetVertices();
 	std::vector<float> averaged_normal_vertices;
-
-	// Calculate averaged normals
-
-
-
 	std::ifstream inputFile("averaged_normal_vertices.txt");
 	if (inputFile.is_open()) {
 		float value;
@@ -457,8 +322,8 @@ int main()
 		inputFile.close();
 	}
 	else {
-		// Calculate averaged normals and populate the vector
-		std::vector<glm::vec3> added_to_vertices;;
+	
+		std::vector<glm::vec3> added_to_vertices;
 		for (size_t i = 0; i < cube_vertices.size(); i += 8) {
 			glm::vec3 averaged_normal(0.0f);
 			std::vector<glm::vec3> added_to_current_normal_calculation;
@@ -475,14 +340,14 @@ int main()
 
 			if (!contains_element(glm::vec3(start_x, start_y, start_z), added_to_vertices))
 			{
-				added_to_vertices.push_back(glm::vec3(start_x, start_y, start_z));
+				added_to_vertices.emplace_back(start_x, start_y, start_z);
 			}
 			else
 			{
 				continue;
 			}
 
-			// Calculate the averaged normal by summing up normals with the same starting point
+		
 			for (size_t j = i; j < cube_vertices.size(); j += 8) {
 				float current_x = cube_vertices[j];
 				float current_y = cube_vertices[j + 1];
@@ -517,16 +382,16 @@ int main()
 
 
 			}
-		
+
 		}
 
-		// Save the calculated data to the file
-		std::ofstream outputFile("averaged_normal_vertices.txt");
-		if (outputFile.is_open()) {
+	
+		std::ofstream output_file("averaged_normal_vertices.txt");
+		if (output_file.is_open()) {
 			for (const float& value : averaged_normal_vertices) {
-				outputFile << value << "\n";
+				output_file << value << "\n";
 			}
-			outputFile.close();
+			output_file.close();
 		}
 		else {
 			std::cerr << "Unable to save data to file.\n";
@@ -544,32 +409,21 @@ int main()
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
 	glEnableVertexAttribArray(0);
 
-	// Unbind VAO and VBO
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindVertexArray(0);
 
 
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// For text
+
 
 	ImGui::CreateContext();
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	io.Fonts->AddFontFromFileTTF("res/FreeSans-LrmZ.ttf", 14);
-	//io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
-
 	ImGui_ImplGlfwGL3_Init(window, true);
-
-	// Setup style
 	ImGui::StyleColorsDark();
 
-
-	glm::vec3 material_ka(0, 0, 0);
-	glm::vec3 material_kd(0, 0, 0);
-	glm::vec3 material_ks(0, 0, 0);
-	float Shininess = 0;
-
 	while (!glfwWindowShouldClose(window)) {
+	
 		start_time = glfwGetTime();
 		glfwPollEvents();
 		handle_key_input(window, &state);
@@ -617,9 +471,6 @@ int main()
 			state.enable_mouse_callback = true;
 		}
 
-
-
-
 		if (flash_light)
 		{
 			glm::vec3 pos = fps_camera.GetTarget() - fps_camera.GetPosition();
@@ -638,7 +489,6 @@ int main()
 		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.68, 0.70, 0.51));
 		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.68, 0.70, 0.51));
 		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1.0f));
-
 		glm::vec3 point_light_position_sun(15, 5, 0);
 		current_shader->SetUniform1f("uSunLight.Kc", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
@@ -650,7 +500,7 @@ int main()
 		{
 		case 1:
 			current_shader = &color_only;
-			mode_render_vertices(model, current_shader, glm::vec3(points_and_lines_color),2);
+			mode_render_vertices(model, current_shader, glm::vec3(points_and_lines_color), 2);
 			break;
 		case 2:
 			current_shader = &color_only;
@@ -669,19 +519,16 @@ int main()
 			current_shader = &color_only;
 			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
 			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
-			//mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
-			current_shader->SetUniform3f("uColor", glm::vec3(all_normals_color));
-			model.RenderNormals();
+			mode_render_normals(model, current_shader, all_normals_color);
 			break;
 		case 6:
 			current_shader = &color_only;
 			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
 			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
-			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
+			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, averaged_normals_color);
 			break;
 		case 7:
-		
-		
+
 			break;
 		case 8:
 			current_shader = &phong_shader_material_texture;
@@ -693,31 +540,25 @@ int main()
 			break;
 		}
 
-
-
-
-
 		glBindVertexArray(0);
 		glUseProgram(0);
 
 		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
 		if (show_gui)
 		{
 
 			ImGui_ImplGlfwGL3_NewFrame();
-			float margin_precentage = 0.025f;
-			int marginLeft = static_cast<int>(margin_precentage * window_width);
-			int marginTop = static_cast<int>(margin_precentage * window_height);
-			int marginBottom = static_cast<int>((0.8 - margin_precentage) * window_height);
-			int marginRight = static_cast<int>((1 - margin_precentage) * window_width);
-			ImGui::SetNextWindowPos(ImVec2(marginLeft, marginTop), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
+			float margin_percentage = 0.025f;
+			int margin_left = static_cast<int>(margin_percentage * window_width);
+			int margin_top = static_cast<int>(margin_percentage * window_height);
+			int margin_right = static_cast<int>((1 - margin_percentage) * window_width);
+			ImGui::SetNextWindowPos(ImVec2(margin_left, margin_top), ImGuiCond_Always, ImVec2(0.0f, 0.0f));
 
 			ImGui::Begin("Modes", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoCollapse);
 			ImGui::Text("Selected mode:");
 			ImVec4 text_color(0.0f, 1.0f, 0.0f, 1.0f); // Green color
-			const char* modesText[] = {
+			const char* modes_text[] = {
 		"Mode 01 - Vertices",
 		"Mode 02 - Triangles",
 		"Mode 03 - Filled",
@@ -726,25 +567,23 @@ int main()
 		"Mode 06 - Averaged normals",
 		"Mode 07 - Shading",
 		"Mode 08 - Texture",
-
 			};
-
-			for (int i = 0; i < std::size(modesText); ++i)
+			for (int i = 0; i < std::size(modes_text); ++i)
 			{
 				if (state.mode == i + 1)
 				{
-					ImGui::TextColored(text_color, modesText[i]);
+					ImGui::TextColored(text_color, modes_text[i]);
 				}
 				else
 				{
-					ImGui::Text(modesText[i]);
+					ImGui::Text(modes_text[i]);
 				}
 			}
 			ImGui::Separator();
 			ImGui::Separator();
 
 			text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-			const char* shadingText[] = {
+			const char* shading_text[] = {
 		"Flat",
 		"Gouraud",
 		"Phong",
@@ -754,125 +593,123 @@ int main()
 			{
 				if (state.shading_mode == i)
 				{
-					ImGui::TextColored(text_color, shadingText[i]);
+					ImGui::TextColored(text_color, shading_text[i]);
 				}
 				else
 				{
-					ImGui::Text(shadingText[i]);
+					ImGui::Text(shading_text[i]);
 				}
 			}
-			float test = 0;
-			ImVec4 sliderColor = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-			ImVec4 activeSliderColor = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+			auto slider_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			auto active_slider_color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
 
 			ImGui::Separator();
 			ImGui::Separator();
 			ImGui::Text("Material components");
 			ImGui::Text("Ambient:");
 
-			ImVec4 frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			auto frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Ambient Red", &material_ka.r, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Ambient Green", &material_ka.g, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Ambient Blue", &material_ka.b, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 			ImGui::Separator();
 
 			ImGui::Text("Diffuse:");
 
-			frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Diffuse Red", &material_kd.r, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Diffuse Green", &material_kd.g, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Diffuse Blue", &material_kd.b, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 			ImGui::Separator();
 
 			ImGui::Text("Specular:");
 
-			frameBgColor = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Specular Red", &material_ks.r, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Specular Green", &material_ks.g, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-			frameBgColor = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
 			ImGui::SliderFloat("Specular Blue", &material_ks.b, 0.0f, 1.0f);
 			ImGui::PopStyleColor(5);
 			ImGui::Separator();
 
 			ImGui::Text("Shininess:");
-			frameBgColor = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-			ImGui::PushStyleColor(ImGuiCol_FrameBg, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frameBgColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrab, sliderColor);
-			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, activeSliderColor);
-			ImGui::SliderFloat("Strength", &Shininess, 0.0f, 1.0f);
-			ImGui::PopStyleColor(5);
 
+			frame_bg_color = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Strength", &shininess, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
 
 			ImGui::End();
 
-
-			ImGui::SetNextWindowPos(ImVec2(marginRight, marginTop), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+			ImGui::SetNextWindowPos(ImVec2(margin_right, margin_top), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
 			ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
 			ImGui::Text("GUI toggle - Q");
 			ImGui::Text("Movement - W A S D");
@@ -889,14 +726,6 @@ int main()
 			ImGui::Text("Phong - P");
 			ImGui::End();
 
-
-			ImGui::SetNextWindowPos(ImVec2(marginRight, marginBottom), ImGuiCond_Always, ImVec2(1.0f, 1.0f));
-
-			ImGui::Begin("Information", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
-			ImGui::Text("TBAaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-
-			ImGui::End();
-
 			ImGui::Render();
 			ImGui_ImplGlfwGL3_RenderDrawData(ImGui::GetDrawData());
 		}
@@ -907,7 +736,6 @@ int main()
 
 	ImGui_ImplGlfwGL3_Shutdown();
 	ImGui::DestroyContext();
-
 	glfwTerminate();
 	return 0;
 }

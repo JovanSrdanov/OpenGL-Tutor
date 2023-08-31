@@ -8,7 +8,7 @@ Camera::Camera() {
     mPitch = 0.0f;
     mYaw = 90.0f;
     mMoveSpeed = 5.5f;
-    mLookSpeed = 10.0f;
+    mLookSpeed = 30.0f;
     mPlayerHeight = 7.0f;
     mFasterSpeed = 5;
     updateVectors();
