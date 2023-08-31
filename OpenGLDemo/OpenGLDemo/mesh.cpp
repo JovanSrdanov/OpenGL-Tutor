@@ -155,7 +155,7 @@ Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::str
         // Normalize the direction vector
         direction = normalize(direction);
 
-        glm::vec3 scaled_direction = 0.5f * direction;
+        glm::vec3 scaled_direction = 0.2f * direction;
         glm::vec3 end_point = start_point + scaled_direction;
 
         normal_line_vertices.push_back(start_point.x);

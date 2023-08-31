@@ -11,7 +11,7 @@
 #include "texture.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
-
+#include <algorithm>
 
 struct input
 {
@@ -29,9 +29,9 @@ struct input
 
 enum shading_mode
 {
-	FLAT,
-	GOURAUD,
-	PHONG
+	flat,
+	gouraud,
+	phong
 };
 
 
@@ -45,7 +45,7 @@ struct engine_state
 	double last_mouse_y = 0;
 	bool first_mouse = true;
 	bool enable_mouse_callback = true;
-	shading_mode shading_mode = FLAT;
+	shading_mode shading_mode = flat;
 };
 
 void error_callback(int error, const char* description)
@@ -84,13 +84,8 @@ void print_data(Camera cam) {
 	std::cout << "###\n";
 };
 
-bool containsElement(const glm::vec3& target, const std::vector<glm::vec3>& added) {
-	for (const glm::vec3& element : added) {
-		if (element == target) {
-			return true; // Element found in the vector
-		}
-	}
-	return false; // Element not found in the vector
+bool contains_element(const glm::vec3& target, const std::vector<glm::vec3>& added) {
+	return std::find(added.begin(), added.end(), target) != added.end();;
 }
 
 
@@ -171,15 +166,15 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	}
 	else if (glfwGetKey(window, GLFW_KEY_I) == GLFW_PRESS)
 	{
-		state->shading_mode = FLAT;
+		state->shading_mode = flat;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_O) == GLFW_PRESS)
 	{
-		state->shading_mode = GOURAUD;
+		state->shading_mode = gouraud;
 	}
 	else if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS)
 	{
-		state->shading_mode = PHONG;
+		state->shading_mode = phong;
 	}
 
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -246,7 +241,7 @@ void mode_normals(const std::vector<float>& cube_vertices, const unsigned cube_v
 void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const unsigned cube_vao)
 {
 
-	mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
+	//mode_polygon_lines_and_filled(cube_vertices, cube_vao, current_shader);
 
 	current_shader->SetUniform3f("uColor", glm::vec3(0.28, 1, 0.00));
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -257,9 +252,9 @@ void mode_averaged_normals(const Shader* current_shader, const std::vector<float
 
 }
 
-void mode_render_vertices(Model model, Shader* current_shader, glm::vec3 color)
+void mode_render_vertices(Model model, Shader* current_shader, glm::vec3 color,float point_size)
 {
-
+	glPointSize(point_size);
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderVertices();
 
@@ -427,7 +422,7 @@ int main()
 	phong_shader_material_texture.SetUniform1f("uMaterial.Shininess", 128);
 
 	// Diffuse texture
-	unsigned rock_diffuse_texture = Texture::LoadImageToTexture("res/test.png");
+	unsigned test_texture = Texture::LoadImageToTexture("res/test.png");
 
 	// Start values of variables
 	Shader* current_shader = &phong_shader_material_texture;
@@ -437,52 +432,15 @@ int main()
 	bool is_q_key_pressed = false;
 	double start_time;
 	glm::mat4 model_matrix(1.0f);
-	float background_color = 0.01f;
+	float background_color = 0.0f;
+	float points_and_lines_color = 1.0f;
+	float filled_color = 0.3f;
+	glm::vec3 all_normals_color = glm::vec3(0.7,0.7,0.0);
+	glm::vec3 averaged_normals_ = glm::vec3(0.5,0.5,0.0);
+	
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
-	//////////////////////////////////////////////////////////////////////////////////////////
-	// 
-	// Calculate the normal lines' vertices
-	std::vector<float> normal_line_vertices;
-	for (size_t i = 0; i < cube_vertices.size(); i += 8) {
-		float x = cube_vertices[i];
-		float y = cube_vertices[i + 1];
-		float z = cube_vertices[i + 2];
-		float nx = cube_vertices[i + 3];
-		float ny = cube_vertices[i + 4];
-		float nz = cube_vertices[i + 5];
 
-		// Calculate the endpoints of the normal line
-		glm::vec3 start_point(x, y, z);
-		glm::vec3 direction(nx, ny, nz);
-
-		// Normalize the direction vector
-		direction = normalize(direction);
-
-		glm::vec3 scaled_direction = 0.5f * direction;
-		glm::vec3 end_point = start_point + scaled_direction;
-
-		normal_line_vertices.push_back(start_point.x);
-		normal_line_vertices.push_back(start_point.y);
-		normal_line_vertices.push_back(start_point.z);
-		normal_line_vertices.push_back(end_point.x);
-		normal_line_vertices.push_back(end_point.y);
-		normal_line_vertices.push_back(end_point.z);
-	}
-	unsigned normal_lines_vao;
-	glGenVertexArrays(1, &normal_lines_vao);
-	glBindVertexArray(normal_lines_vao);
-
-	unsigned normal_lines_vbo;
-	glGenBuffers(1, &normal_lines_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, normal_lines_vbo);
-	glBufferData(GL_ARRAY_BUFFER, normal_line_vertices.size() * sizeof(float), normal_line_vertices.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
-	glEnableVertexAttribArray(0);
-
-	// Unbind VAO and VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
 
 	std::vector<float> averaged_normal_vertices;
 
@@ -515,7 +473,7 @@ int main()
 			float start_y = cube_vertices[i + 1];
 			float start_z = cube_vertices[i + 2];
 
-			if (!containsElement(glm::vec3(start_x, start_y, start_z), added_to_vertices))
+			if (!contains_element(glm::vec3(start_x, start_y, start_z), added_to_vertices))
 			{
 				added_to_vertices.push_back(glm::vec3(start_x, start_y, start_z));
 			}
@@ -536,7 +494,7 @@ int main()
 
 				if (start_x == current_x && start_y == current_y && start_z == current_z) {
 					glm::vec3 current_normal(current_nx, current_ny, current_nz);
-					if (!containsElement(current_normal, added_to_current_normal_calculation)) {
+					if (!contains_element(current_normal, added_to_current_normal_calculation)) {
 						averaged_normal += current_normal;
 						added_to_current_normal_calculation.push_back(current_normal);
 					}
@@ -547,7 +505,7 @@ int main()
 				averaged_normal = static_cast<float>(1.00 / added_to_current_normal_calculation.size()) * averaged_normal;
 				averaged_normal = glm::normalize(averaged_normal);
 
-				glm::vec3 scaled_direction = 5.0f * averaged_normal;
+				glm::vec3 scaled_direction = 0.2f * averaged_normal;
 				glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
 
 				averaged_normal_vertices.push_back(start_x);
@@ -610,25 +568,6 @@ int main()
 	glm::vec3 material_kd(0, 0, 0);
 	glm::vec3 material_ks(0, 0, 0);
 	float Shininess = 0;
-
-	/// joj
-	auto tacke = model.GetVertices();
-	unsigned tacke_vao;
-	glGenVertexArrays(1, &tacke_vao);
-	glBindVertexArray(tacke_vao);
-
-	unsigned tacke_vbo;
-	glGenBuffers(1, &tacke_vbo);
-	glBindBuffer(GL_ARRAY_BUFFER, tacke_vbo);
-	glBufferData(GL_ARRAY_BUFFER, tacke.size() * sizeof(float), tacke.data(), GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
-	glEnableVertexAttribArray(0);
-
-	// Unbind VAO and VBO
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindVertexArray(0);
-
-
 
 	while (!glfwWindowShouldClose(window)) {
 		start_time = glfwGetTime();
@@ -706,33 +645,38 @@ int main()
 		current_shader->SetUniform3f("uSunLight.Position", point_light_position_sun);
 		current_shader->SetUniform1f("uIsDrawingLines", 0);
 
+
 		switch (state.mode)
 		{
 		case 1:
 			current_shader = &color_only;
-			mode_render_vertices(model, current_shader, glm::vec3(1.0f));
+			mode_render_vertices(model, current_shader, glm::vec3(points_and_lines_color),2);
 			break;
 		case 2:
 			current_shader = &color_only;
-			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
+			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
 			break;
 		case 3:
 			current_shader = &color_only;
-			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
+			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
 			break;
 		case 4:
 			current_shader = &color_only;
-			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
-			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
+			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
+			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
 			break;
 		case 5:
 			current_shader = &color_only;
-			mode_render_filled_triangles(model, current_shader, glm::vec3(0.5f));
-			mode_render_triangles(model, current_shader, glm::vec3(1.0f));
-			mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
+			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
+			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
+			//mode_normals(cube_vertices, cube_vao, current_shader, normal_line_vertices, normal_lines_vao);
+			current_shader->SetUniform3f("uColor", glm::vec3(all_normals_color));
+			model.RenderNormals();
 			break;
 		case 6:
 			current_shader = &color_only;
+			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
+			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
 			mode_averaged_normals(current_shader, averaged_normal_vertices, averaged_normal_lines_vao, cube_vertices, cube_vao);
 			break;
 		case 7:
@@ -742,11 +686,8 @@ int main()
 		case 8:
 			current_shader = &phong_shader_material_texture;
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, rock_diffuse_texture);
+			glBindTexture(GL_TEXTURE_2D, test_texture);
 			model.RenderWithTexture();
-		
-
-
 			break;
 		default:
 			break;
@@ -809,7 +750,7 @@ int main()
 		"Phong",
 			};
 			ImGui::Text("Selected shading type:");
-			for (int i = FLAT; i <= PHONG; ++i)
+			for (int i = flat; i <= phong; ++i)
 			{
 				if (state.shading_mode == i)
 				{

@@ -7,7 +7,7 @@ Camera::Camera() {
     mVelocity = glm::vec3(0.0f);
     mPitch = 0.0f;
     mYaw = 90.0f;
-    mMoveSpeed = 252.5f;
+    mMoveSpeed = 5.5f;
     mLookSpeed = 10.0f;
     mPlayerHeight = 7.0f;
     mFasterSpeed = 5;
