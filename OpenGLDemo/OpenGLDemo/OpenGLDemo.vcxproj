@@ -146,7 +146,7 @@
     <None Include="color.frag" />
     <None Include="packages.config" />
     <None Include="shaders\basic.vert" />
-    <None Include="shaders\phong_material_texture.frag" />
+    <None Include="shaders\phong_material.frag" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.hpp" />

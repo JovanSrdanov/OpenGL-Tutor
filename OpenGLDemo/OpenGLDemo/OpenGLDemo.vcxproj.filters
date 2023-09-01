@@ -19,7 +19,7 @@
     <None Include="shaders\basic.vert">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="shaders\phong_material_texture.frag">
+    <None Include="shaders\phong_material.frag">
       <Filter>Source Files</Filter>
     </None>
     <None Include="color.frag" />

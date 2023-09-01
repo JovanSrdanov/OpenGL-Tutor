@@ -253,8 +253,8 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	//Model model("res/Woman/091_W_Aya_100K.obj");
-	Model model("res/moto_simple_1.obj");
+	Model model("res/Woman/091_W_Aya_100K.obj");
+	//Model model("res/moto_simple_1.obj");
 	if (!model.Load())
 	{
 		std::cerr << "Failed to load model\n";
@@ -263,7 +263,7 @@ int main()
 	}
 
 	Shader color_only("shaders/basic.vert", "shaders/color.frag");
-	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
+	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material.frag");
 	glUseProgram(phong_shader_material_texture.GetId());
 
 	// Default for point light (Sun)
@@ -303,10 +303,10 @@ int main()
 	auto averaged_normals_color = glm::vec3(0.5, 0.5, 0.0);
 	glm::mat4 model_matrix(1.0f);
 
-	glm::vec3 material_ka(0, 0, 0);
-	glm::vec3 material_kd(0, 0, 0);
-	glm::vec3 material_ks(0, 0, 0);
-	float shininess = 0;
+	glm::vec3 material_ka(1, 1, 1);
+	glm::vec3 material_kd(1, 1, 1);
+	glm::vec3 material_ks(1, 1, 1);
+	float shininess = 1;
 
 	float background_color = 0.0f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
@@ -423,6 +423,8 @@ int main()
 	ImGui::StyleColorsDark();
 
 	while (!glfwWindowShouldClose(window)) {
+
+	
 	
 		start_time = glfwGetTime();
 		glfwPollEvents();
@@ -434,6 +436,10 @@ int main()
 		current_shader->SetView(glm::lookAt(fps_camera.GetPosition(), fps_camera.GetTarget(), fps_camera.GetUp()));
 		current_shader->SetUniform3f("uViewPos", fps_camera.GetPosition());
 		current_shader->SetModel(model_matrix);
+		current_shader->SetUniform3f("uMaterial.Ka", material_ka); // *** Check what is it for
+		current_shader->SetUniform3f("uMaterial.Kd", material_kd);
+		current_shader->SetUniform3f("uMaterial.Ks", material_ks);
+		current_shader->SetUniform1f("uMaterial.Shininess", shininess*128);
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 		{
@@ -487,9 +493,9 @@ int main()
 		}
 
 		current_shader->SetUniform3f("uDirLight.Direction", glm::vec3(0, -0.1, 0));
-		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.5));
-		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.5));
-		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(0.5));
+		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.30));
+		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.30));
+		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(0.30));
 		glm::vec3 point_light_position_sun(1115, 5, 0);
 		current_shader->SetUniform1f("uSunLight.Kc", 0.1 / abs(sin(start_time)));
 		current_shader->SetUniform1f("uSunLight.Kq", 0.1 / abs(sin(start_time)));
