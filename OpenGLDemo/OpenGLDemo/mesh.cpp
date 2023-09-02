@@ -40,15 +40,15 @@ void
 Mesh::RenderSmooth() const {
     glBindVertexArray(mVAO_smooth);
 
-    //if (mDiffuseTexture) {
-    //    glActiveTexture(GL_TEXTURE0);
-    //    glBindTexture(GL_TEXTURE_2D, mDiffuseTexture);
-    //}
+    ////if (mDiffuseTexture) {
+    ////    glActiveTexture(GL_TEXTURE0);
+    ////    glBindTexture(GL_TEXTURE_2D, mDiffuseTexture);
+    ////}
 
-    //if (mSpecularTexture) {
-    //    glActiveTexture(GL_TEXTURE1);
-    //    glBindTexture(GL_TEXTURE_2D, mSpecularTexture);
-    //}
+    ////if (mSpecularTexture) {
+    ////    glActiveTexture(GL_TEXTURE1);
+    ////    glBindTexture(GL_TEXTURE_2D, mSpecularTexture);
+    ////}
 
     if (mIndexCount) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO_smooth);

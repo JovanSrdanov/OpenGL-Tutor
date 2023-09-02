@@ -40,7 +40,7 @@ struct engine_state
 	input* m_input;
 	Camera* m_camera;
 	double m_dt;
-	int mode = 7;
+	int mode = 8;
 	double last_mouse_x = 0;
 	double last_mouse_y = 0;
 	bool first_mouse = true;
@@ -275,6 +275,7 @@ int main()
 
 	// Diffuse texture
 	unsigned test_texture = Texture::LoadImageToTexture("res/test.png");
+	unsigned test_specular_texture = Texture::LoadImageToTexture("res/test_spec.png");
 
 	// Start values of variables
 	Shader* current_shader = &phong_shader_material;
@@ -454,10 +455,20 @@ int main()
 			}
 			break;
 		case 8:
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, test_texture);
 			current_shader = &phong_shader_material_texture;
 			glUseProgram(current_shader->GetId());
+
+			current_shader->SetUniform1i("uMaterial.Ka", 0); // *** Check what is it for
+			current_shader->SetUniform1i("uMaterial.Kd", 0);
+			current_shader->SetUniform1i("uMaterial.Ks", 1);
+		
+
+
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_2D, test_texture);
+			glActiveTexture(GL_TEXTURE1);
+			glBindTexture(GL_TEXTURE_2D, test_specular_texture);
+
 			model.RenderSmooth();
 			break;
 		default:
@@ -504,135 +515,134 @@ int main()
 				}
 			}
 
-			if (state.mode == 7)
+
+			ImGui::Separator();
+			ImGui::Separator();
+			text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+			const char* shading_text[] = {
+		"Flat",
+		"Gouraud",
+		"Phong",
+			};
+			ImGui::Text("Selected shading type:");
+			for (int i = flat; i <= phong; ++i)
 			{
-				ImGui::Separator();
-				ImGui::Separator();
-				text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
-				const char* shading_text[] = {
-			"Flat",
-			"Gouraud",
-			"Phong",
-				};
-				ImGui::Text("Selected shading type:");
-				for (int i = flat; i <= phong; ++i)
+				if (state.shading_mode == i)
 				{
-					if (state.shading_mode == i)
-					{
-						ImGui::TextColored(text_color, shading_text[i]);
-					}
-					else
-					{
-						ImGui::Text(shading_text[i]);
-					}
+					ImGui::TextColored(text_color, shading_text[i]);
 				}
-				auto slider_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-				auto active_slider_color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
-
-				ImGui::Separator();
-				ImGui::Separator();
-				ImGui::Text("Material components");
-				ImGui::Text("Ambient:");
-
-				auto frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Ambient Red", &material_ka.r, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Ambient Green", &material_ka.g, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Ambient Blue", &material_ka.b, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-				ImGui::Separator();
-
-				ImGui::Text("Diffuse:");
-
-				frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Diffuse Red", &material_kd.r, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Diffuse Green", &material_kd.g, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Diffuse Blue", &material_kd.b, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-				ImGui::Separator();
-
-				ImGui::Text("Specular:");
-
-				frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Specular Red", &material_ks.r, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Specular Green", &material_ks.g, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-
-				frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Specular Blue", &material_ks.b, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
-				ImGui::Separator();
-
-				ImGui::Text("Shininess:");
-
-				frame_bg_color = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
-				ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
-				ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
-				ImGui::SliderFloat("Strength", &shininess, 0.0f, 1.0f);
-				ImGui::PopStyleColor(5);
+				else
+				{
+					ImGui::Text(shading_text[i]);
+				}
 			}
+			auto slider_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
+			auto active_slider_color = ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+
+			ImGui::Separator();
+			ImGui::Separator();
+			ImGui::Text("Material components");
+			ImGui::Text("Ambient:");
+
+			auto frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Ambient Red", &material_ka.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Ambient Green", &material_ka.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Ambient Blue", &material_ka.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Diffuse:");
+
+			frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Diffuse Red", &material_kd.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Diffuse Green", &material_kd.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Diffuse Blue", &material_kd.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Specular:");
+
+			frame_bg_color = ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Specular Red", &material_ks.r, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Specular Green", &material_ks.g, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+
+			frame_bg_color = ImVec4(0.0f, 0.0f, 1.0f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Specular Blue", &material_ks.b, 0.0f, 1.0f);
+			ImGui::PopStyleColor(5);
+			ImGui::Separator();
+
+			ImGui::Text("Shininess:");
+
+			frame_bg_color = ImVec4(0.1f, 0.1f, 0.1f, 1.0f);
+			ImGui::PushStyleColor(ImGuiCol_FrameBg, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgHovered, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_FrameBgActive, frame_bg_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrab, slider_color);
+			ImGui::PushStyleColor(ImGuiCol_SliderGrabActive, active_slider_color);
+			ImGui::SliderFloat("Strength", &shininess, 0.025f, 1.0f);
+			ImGui::PopStyleColor(5);
+
 
 
 			ImGui::End();

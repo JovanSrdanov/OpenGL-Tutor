@@ -43,14 +43,8 @@ in vec3 vWorldSpaceNormal;
 
 out vec4 FragColor;
 
-uniform int uIsPureColor;
-uniform vec3 uColor;
 
 void main() {
-	 if (uIsPureColor == 1) {
-        FragColor = vec4(uColor, 1.0f);
-		return;
-    }
 
 	vec3 ViewDirection = normalize(uViewPos - vWorldSpaceFragment);
 
