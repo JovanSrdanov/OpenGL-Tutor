@@ -267,11 +267,9 @@ int main()
 	}
 
 	Shader color_only("shaders/basic.vert", "shaders/color.frag");
-
 	Shader gouraud_shader_material("shaders/gouraud.vert", "shaders/gouraud.frag");
 	Shader phong_shader_material("shaders/basic.vert", "shaders/phong_material.frag");
-
-//	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
+	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
 
 	glUseProgram(phong_shader_material.GetId());
 
@@ -457,7 +455,7 @@ int main()
 		case 8:
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, test_texture);
-			//	current_shader = &phong_shader_material_texture;
+				current_shader = &phong_shader_material_texture;
 				glUseProgram(current_shader->GetId());
 				model.RenderFull();
 			break;
