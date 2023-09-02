@@ -36,7 +36,8 @@ public:
 	std::string mDirectory;
 	Model(std::string filename);
 	bool Load();
-	void RenderFull();
+	void RenderFlat();
+	void RenderSmooth();
 	void RenderVertices();
 	void RenderTriangles();
 	void RenderFilledTriangles();

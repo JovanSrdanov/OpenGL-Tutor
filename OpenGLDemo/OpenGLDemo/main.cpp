@@ -45,7 +45,7 @@ struct engine_state
 	double last_mouse_y = 0;
 	bool first_mouse = true;
 	bool enable_mouse_callback = true;
-	shading_mode shading_mode = gouraud;
+	shading_mode shading_mode = flat;
 };
 
 void error_callback(int error, const char* description)
@@ -305,8 +305,8 @@ int main()
 
 	while (!glfwWindowShouldClose(window)) {
 
-	
-	
+
+
 		start_time = glfwGetTime();
 		glfwPollEvents();
 		handle_key_input(window, &state);
@@ -346,7 +346,7 @@ int main()
 		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.50));
 		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1));
 
-	
+
 
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
@@ -433,31 +433,32 @@ int main()
 
 			break;
 		case 7:
-			switch(state.shading_mode)
+			switch (state.shading_mode)
 			{
 			case flat:
 				current_shader = &gouraud_shader_material;
 				glUseProgram(current_shader->GetId());
+				model.RenderFlat();
 				break;
 			case gouraud:
 				current_shader = &gouraud_shader_material;
 				glUseProgram(current_shader->GetId());
-				model.RenderFull();
+				model.RenderSmooth();
 				break;
 			case phong:
 				current_shader = &phong_shader_material;
 				glUseProgram(current_shader->GetId());
-				model.RenderFull();
+				model.RenderSmooth();
 				break;
-			
+
 			}
 			break;
 		case 8:
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, test_texture);
-				current_shader = &phong_shader_material_texture;
-				glUseProgram(current_shader->GetId());
-				model.RenderFull();
+			current_shader = &phong_shader_material_texture;
+			glUseProgram(current_shader->GetId());
+			model.RenderSmooth();
 			break;
 		default:
 			break;
@@ -502,8 +503,8 @@ int main()
 					ImGui::Text(modes_text[i]);
 				}
 			}
-		
-			if(state.mode==7)
+
+			if (state.mode == 7)
 			{
 				ImGui::Separator();
 				ImGui::Separator();
@@ -632,7 +633,7 @@ int main()
 				ImGui::SliderFloat("Strength", &shininess, 0.0f, 1.0f);
 				ImGui::PopStyleColor(5);
 			}
-		
+
 
 			ImGui::End();
 

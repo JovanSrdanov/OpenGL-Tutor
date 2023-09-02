@@ -17,7 +17,7 @@ Model::Load() {
     mMeshes.reserve(Scene->mNumMeshes);
     for(unsigned MeshIdx = 0; MeshIdx < Scene->mNumMeshes; ++MeshIdx) {
         aiMesh* CurrAIMesh = Scene->mMeshes[MeshIdx];
-        Mesh CurrMesh(CurrAIMesh, Scene->mMaterials[CurrAIMesh->mMaterialIndex], mDirectory);
+        Mesh CurrMesh(CurrAIMesh, Scene->mMaterials[CurrAIMesh->mMaterialIndex], mDirectory, MeshIdx+1);
         mMeshes.push_back(CurrMesh);
 
     }
@@ -26,10 +26,19 @@ Model::Load() {
 }
 
 void
-Model::RenderFull() {
+Model::RenderFlat() {
     for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
         Mesh &Mesh = mMeshes[MeshIdx];
-        mMeshes[MeshIdx].RenderWithTexture();
+        mMeshes[MeshIdx].RenderFlat();
+    }
+}
+
+
+void
+Model::RenderSmooth() {
+    for (unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh& Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderSmooth();
     }
 }
 
