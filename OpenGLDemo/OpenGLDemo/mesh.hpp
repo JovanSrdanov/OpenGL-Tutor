@@ -14,6 +14,9 @@ private:
 	unsigned normal_lines_vao;
 	unsigned normal_lines_vbo;
 	std::vector<float> normal_line_vertices;
+	unsigned averaged_normal_lines_vao;
+	unsigned averaged_normal_lines_vbo;
+	std::vector<float> averaged_normal_vertices;
 	unsigned mEBO;
 	unsigned mVertexCount;
 	unsigned mIndexCount;
@@ -31,5 +34,6 @@ public:
 	void RenderTriangles() const;
 	void RenderFilledTriangles() const;
 	void RenderNormals() const;
+	void RenderAveragedNormals() const;
 	std::vector<float> GetVertices() const;
 };

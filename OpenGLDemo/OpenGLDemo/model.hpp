@@ -36,11 +36,12 @@ public:
 	std::string mDirectory;
 	Model(std::string filename);
 	bool Load();
-	void RenderWithTexture();
+	void RenderFull();
 	void RenderVertices();
 	void RenderTriangles();
 	void RenderFilledTriangles();
 	void RenderNormals();
+	void RenderAveragedNormals();
 	std::vector<float> GetVertices() const;
 };
 

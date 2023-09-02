@@ -26,7 +26,7 @@ Model::Load() {
 }
 
 void
-Model::RenderWithTexture() {
+Model::RenderFull() {
     for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
         Mesh &Mesh = mMeshes[MeshIdx];
         mMeshes[MeshIdx].RenderWithTexture();
@@ -58,6 +58,13 @@ Model::RenderNormals() {
     for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
         Mesh &Mesh = mMeshes[MeshIdx];
         mMeshes[MeshIdx].RenderNormals();
+    }
+}
+void
+Model::RenderAveragedNormals() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderAveragedNormals();
     }
 }
 std::vector<float> Model::GetVertices() const {

@@ -22,7 +22,15 @@
     <None Include="shaders\phong_material.frag">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="color.frag" />
+    <None Include="shaders\color.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\gouraud.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\gouraud.vert">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stb_image.h">

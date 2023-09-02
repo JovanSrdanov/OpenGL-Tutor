@@ -1,11 +1,13 @@
 #include "mesh.hpp"
 
+#include <fstream>
 #include <glm/vec3.hpp>
 #include <glm/detail/func_geometric.inl>
 
 Mesh::Mesh(const aiMesh* mesh, const aiMaterial* material, const std::string &resPath) {
     processMesh(mesh, material, resPath);
 }
+
 
 void
 Mesh::RenderWithTexture() const {
@@ -75,6 +77,14 @@ Mesh::RenderNormals() const {
     glBindVertexArray(0);
     glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 }
+void
+Mesh::RenderAveragedNormals() const {
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    glBindVertexArray(averaged_normal_lines_vao);
+    glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
+    glBindVertexArray(0);
+    glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+}
 
 
 unsigned
@@ -90,6 +100,14 @@ Mesh::loadMeshTexture(const aiMaterial* material, const std::string& resPath, ai
 
     return 0;
 }
+
+
+
+
+bool contains_element(const glm::vec3& target, const std::vector<glm::vec3>& added) {
+    return std::find(added.begin(), added.end(), target) != added.end();
+}
+
 
 void
 Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::string& resPath) {
@@ -178,6 +196,107 @@ Mesh::processMesh(const aiMesh* mesh, const aiMaterial* material, const std::str
     // Unbind VAO and VBO
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
+   
+    std::ifstream inputFile("averaged_normal_vertices.txt");
+    if (inputFile.is_open()) {
+        float value;
+        while (inputFile >> value) {
+            averaged_normal_vertices.push_back(value);
+        }
+        inputFile.close();
+    }
+    else {
+
+        std::vector<glm::vec3> added_to_vertices;
+        for (size_t i = 0; i < mVertices.size(); i += 8) {
+            glm::vec3 averaged_normal(0.0f);
+            std::vector<glm::vec3> added_to_current_normal_calculation;
+
+            if (i % 8000 == 0)
+            {
+                std::cout << i << "\n";
+                std::cout << mVertices.size() << "\n";
+            }
+
+            float start_x = mVertices[i];
+            float start_y = mVertices[i + 1];
+            float start_z = mVertices[i + 2];
+
+            if (!contains_element(glm::vec3(start_x, start_y, start_z), added_to_vertices))
+            {
+                added_to_vertices.emplace_back(start_x, start_y, start_z);
+            }
+            else
+            {
+                continue;
+            }
+
+
+            for (size_t j = i; j < mVertices.size(); j += 8) {
+                float current_x = mVertices[j];
+                float current_y = mVertices[j + 1];
+                float current_z = mVertices[j + 2];
+                float current_nx = mVertices[j + 3];
+                float current_ny = mVertices[j + 4];
+                float current_nz = mVertices[j + 5];
+
+
+                if (start_x == current_x && start_y == current_y && start_z == current_z) {
+                    glm::vec3 current_normal(current_nx, current_ny, current_nz);
+                    if (!contains_element(current_normal, added_to_current_normal_calculation)) {
+                        averaged_normal += current_normal;
+                        added_to_current_normal_calculation.push_back(current_normal);
+                    }
+                }
+            }
+
+            if (averaged_normal != glm::vec3(0.0f)) {
+                averaged_normal = static_cast<float>(1.00 / added_to_current_normal_calculation.size()) * averaged_normal;
+                averaged_normal = glm::normalize(averaged_normal);
+
+                glm::vec3 scaled_direction = 0.2f * averaged_normal;
+                glm::vec3 end_point = glm::vec3(start_x, start_y, start_z) + scaled_direction;
+
+                averaged_normal_vertices.push_back(start_x);
+                averaged_normal_vertices.push_back(start_y);
+                averaged_normal_vertices.push_back(start_z);
+                averaged_normal_vertices.push_back(end_point.x);
+                averaged_normal_vertices.push_back(end_point.y);
+                averaged_normal_vertices.push_back(end_point.z);
+
+
+            }
+
+        }
+
+
+        std::ofstream output_file("averaged_normal_vertices.txt");
+        if (output_file.is_open()) {
+            for (const float& value : averaged_normal_vertices) {
+                output_file << value << "\n";
+            }
+            output_file.close();
+        }
+        else {
+            std::cerr << "Unable to save data to file.\n";
+        }
+    }
+
+	averaged_normal_lines_vao;
+    glGenVertexArrays(1, &averaged_normal_lines_vao);
+    glBindVertexArray(averaged_normal_lines_vao);
+
+	averaged_normal_lines_vbo;
+    glGenBuffers(1, &averaged_normal_lines_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, averaged_normal_lines_vbo);
+    glBufferData(GL_ARRAY_BUFFER, averaged_normal_vertices.size() * sizeof(float), averaged_normal_vertices.data(), GL_STATIC_DRAW);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), static_cast<void*>(nullptr));
+    glEnableVertexAttribArray(0);
+
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindVertexArray(0);
+
 
 }
 std::vector<float> Mesh::GetVertices() const {
