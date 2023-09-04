@@ -18,6 +18,7 @@ public: // make private when finished
 	float mPitch;
 	float mYaw;
 	float mPlayerHeight;
+	float mFasterSpeed;
 	void updateVectors();
 
 public:

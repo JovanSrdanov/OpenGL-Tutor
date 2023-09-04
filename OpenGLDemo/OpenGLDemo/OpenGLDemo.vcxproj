@@ -123,7 +123,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>%(AdditionalDependencies);opengl32.lib</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -145,6 +145,12 @@
   <ItemGroup>
     <None Include="packages.config" />
     <None Include="shaders\basic.vert" />
+    <None Include="shaders\color.frag" />
+    <None Include="shaders\flat.frag" />
+    <None Include="shaders\flat.vert" />
+    <None Include="shaders\gouraud.frag" />
+    <None Include="shaders\gouraud.vert" />
+    <None Include="shaders\phong_material.frag" />
     <None Include="shaders\phong_material_texture.frag" />
   </ItemGroup>
   <ItemGroup>

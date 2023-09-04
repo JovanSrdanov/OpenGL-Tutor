@@ -36,7 +36,13 @@ public:
 	std::string mDirectory;
 	Model(std::string filename);
 	bool Load();
-	void Render();
+	void RenderFlat();
+	void RenderSmooth();
+	void RenderVertices();
+	void RenderTriangles();
+	void RenderFilledTriangles();
+	void RenderNormals();
+	void RenderAveragedNormals();
 	std::vector<float> GetVertices() const;
 };
 

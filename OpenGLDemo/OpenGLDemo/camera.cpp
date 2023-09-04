@@ -1,15 +1,16 @@
 #include "camera.hpp"
 
 Camera::Camera() {
-    mPosition = glm::vec3(-4.0f, 2.0f, -4.0f);
+    mPosition = glm::vec3(1.0f, 0.0f, -10.0);
     mWorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
     mRight = glm::vec3(0.0f, 0.0f, 0.0f);
     mVelocity = glm::vec3(0.0f);
-    mPitch = 20.0f;
-    mYaw = 45.0f;
-    mMoveSpeed = 330.0f;
-    mLookSpeed = 70.0f;
-    mPlayerHeight = 2.0f;
+    mPitch = -15.0f;
+    mYaw = 90.0f;
+    mMoveSpeed = 5.5f;
+    mLookSpeed = 30.0f;
+    mPlayerHeight = 7.0f;
+    mFasterSpeed = 5;
     updateVectors();
 }
 

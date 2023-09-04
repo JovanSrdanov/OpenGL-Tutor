@@ -17,7 +17,7 @@ Model::Load() {
     mMeshes.reserve(Scene->mNumMeshes);
     for(unsigned MeshIdx = 0; MeshIdx < Scene->mNumMeshes; ++MeshIdx) {
         aiMesh* CurrAIMesh = Scene->mMeshes[MeshIdx];
-        Mesh CurrMesh(CurrAIMesh, Scene->mMaterials[CurrAIMesh->mMaterialIndex], mDirectory);
+        Mesh CurrMesh(CurrAIMesh, Scene->mMaterials[CurrAIMesh->mMaterialIndex], mDirectory, MeshIdx+1);
         mMeshes.push_back(CurrMesh);
 
     }
@@ -26,10 +26,54 @@ Model::Load() {
 }
 
 void
-Model::Render() {
+Model::RenderFlat() {
     for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
         Mesh &Mesh = mMeshes[MeshIdx];
-        mMeshes[MeshIdx].Render();
+        mMeshes[MeshIdx].RenderFlat();
+    }
+}
+
+
+void
+Model::RenderSmooth() {
+    for (unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh& Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderSmooth();
+    }
+}
+
+void
+Model::RenderVertices() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderVertices();
+    }
+}
+void
+Model::RenderTriangles() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderTriangles();
+    }
+}void
+Model::RenderFilledTriangles() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderFilledTriangles();
+    }
+}
+void
+Model::RenderNormals() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderNormals();
+    }
+}
+void
+Model::RenderAveragedNormals() {
+    for(unsigned MeshIdx = 0; MeshIdx < mMeshes.size(); ++MeshIdx) {
+        Mesh &Mesh = mMeshes[MeshIdx];
+        mMeshes[MeshIdx].RenderAveragedNormals();
     }
 }
 std::vector<float> Model::GetVertices() const {
