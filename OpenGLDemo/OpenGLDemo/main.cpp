@@ -12,7 +12,6 @@
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw_gl3.h"
 
-
 struct input
 {
 	bool move_left;
@@ -34,13 +33,12 @@ enum shading_mode
 	phong
 };
 
-
 struct engine_state
 {
 	input* m_input;
 	Camera* m_camera;
 	double m_dt;
-	int mode = 8;
+	int mode = 1;
 	double last_mouse_x = 0;
 	double last_mouse_y = 0;
 	bool first_mouse = true;
@@ -71,22 +69,12 @@ void handle_input(const engine_state* state)
 	if (user_input->go_up) fps_camera->UpDown(1, state->m_dt);
 	if (user_input->go_down) fps_camera->UpDown(-1, state->m_dt);
 }
-void print_data(Camera cam) {
-	std::cout << "###\n";
-	std::cout << "Position";
-	std::cout << cam.GetPosition().x << " " << cam.GetPosition().y << " " << cam.GetPosition().z << "\n";
-	std::cout << "Pitch";
-	std::cout << cam.mPitch << "\n";
-	std::cout << "Yawn";
-	std::cout << cam.mYaw << "\n";
-	std::cout << "###\n";
-};
-
 
 void mouse_callback(GLFWwindow* window, const double x_pos, const double y_pos)
 {
 	auto* state = static_cast<engine_state*>(glfwGetWindowUserPointer(window));
-	if (!state->enable_mouse_callback) {
+	if (!state->enable_mouse_callback) 
+	{
 		state->last_mouse_x = x_pos;
 		state->last_mouse_y = y_pos;
 		return;
@@ -115,7 +103,6 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	user_input->move_down = glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS;
 	user_input->go_up = glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS;
 	user_input->go_down = glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS;
-
 	if (glfwGetKey(window, GLFW_KEY_1) == GLFW_PRESS)
 	{
 		state->mode = 1;
@@ -160,13 +147,11 @@ void handle_key_input(GLFWwindow* window, engine_state* state)
 	{
 		state->shading_mode = phong;
 	}
-
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
 	{
 		glfwSetWindowShouldClose(window, GLFW_TRUE);
 	}
 }
-
 
 void mode_averaged_normals(const Shader* current_shader, const std::vector<float>& averaged_normal_vertices, const unsigned averaged_normal_lines_vao, const std::vector<float>& cube_vertices, const glm::vec3 color)
 {
@@ -176,7 +161,6 @@ void mode_averaged_normals(const Shader* current_shader, const std::vector<float
 	glDrawArrays(GL_LINES, 0, averaged_normal_vertices.size() / 3);
 	glBindVertexArray(0);
 	glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
 }
 
 void mode_render_vertices(Model model, const Shader* current_shader, const glm::vec3 color, const float point_size)
@@ -188,7 +172,6 @@ void mode_render_vertices(Model model, const Shader* current_shader, const glm::
 
 void mode_render_triangles(Model model, const Shader* current_shader, const glm::vec3 color)
 {
-
 	current_shader->SetUniform3f("uColor", color);
 	model.RenderTriangles();
 }
@@ -227,7 +210,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 16);
-	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), nullptr, nullptr);
+	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), glfwGetPrimaryMonitor(), nullptr);
 	if (!window)
 	{
 		std::cerr << "Failed to create window" << std::endl;
@@ -256,9 +239,7 @@ int main()
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
 
-	//Model model("res/Woman/091_W_Aya_100K.obj");
 	Model model("res/moto_simple_1.obj");
-	//Model model("res/12190_Heart_v1_L3.obj");
 	if (!model.Load())
 	{
 		std::cerr << "Failed to load model\n";
@@ -270,32 +251,27 @@ int main()
 	Shader gouraud_shader_material("shaders/gouraud.vert", "shaders/gouraud.frag");
 	Shader phong_shader_material("shaders/basic.vert", "shaders/phong_material.frag");
 	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
-
 	glUseProgram(phong_shader_material.GetId());
 
-	// Diffuse texture
 	unsigned test_texture = Texture::LoadImageToTexture("res/test.png");
 	unsigned test_specular_texture = Texture::LoadImageToTexture("res/test_spec.png");
 
-	// Start values of variables
 	Shader* current_shader = &phong_shader_material;
 	bool flash_light = false;
 	bool show_gui = true;
 	bool is_f_key_pressed = false;
 	bool is_q_key_pressed = false;
 	double start_time;
-	float filled_color = 0.3f;
-	float points_and_lines_color = 1.0f;
 	auto all_normals_color = glm::vec3(0.7, 0.7, 0.0);
 	auto averaged_normals_color = glm::vec3(0.5, 0.5, 0.0);
+	float background_color = 0.0f;
+	float filled_color = 0.3f;
+	float points_and_lines_color = 1.0f;
+	float shininess = 1;
 	glm::mat4 model_matrix(1.0f);
-
 	glm::vec3 material_ka(1, 1, 1);
 	glm::vec3 material_kd(1, 1, 1);
 	glm::vec3 material_ks(1, 1, 1);
-	float shininess = 1;
-
-	float background_color = 0.0f;
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
 	ImGui::CreateContext();
@@ -304,10 +280,8 @@ int main()
 	ImGui_ImplGlfwGL3_Init(window, true);
 	ImGui::StyleColorsDark();
 
-	while (!glfwWindowShouldClose(window)) {
-
-
-
+	while (!glfwWindowShouldClose(window)) 
+	{
 		start_time = glfwGetTime();
 		glfwPollEvents();
 		handle_key_input(window, &state);
@@ -319,13 +293,13 @@ int main()
 		current_shader->SetUniform3f("uViewPos", fps_camera.GetPosition());
 		current_shader->SetModel(model_matrix);
 
-		glm::vec3 point_light_position_sun(-1115, 5, 0);
+		glm::vec3 point_light_position_sun(0, 0, -10);
 		current_shader->SetUniform3f("uSunLight.Position", point_light_position_sun);
-		current_shader->SetUniform1f("uSunLight.Kc", 1);
-		current_shader->SetUniform1f("uSunLight.Kq", 1);
-		current_shader->SetUniform1f("uSunLight.Kl", 1);
-		current_shader->SetUniform3f("uSunLight.Ka", glm::vec3(1.00, 0.97, 0.00));
-		current_shader->SetUniform3f("uSunLight.Kd", glm::vec3(1.00, 0.97, 0.00));
+		current_shader->SetUniform1f("uSunLight.Kc", 0.001);
+		current_shader->SetUniform1f("uSunLight.Kq", 0.01);
+		current_shader->SetUniform1f("uSunLight.Kl", 0.11);
+		current_shader->SetUniform3f("uSunLight.Ka", glm::vec3(0.00, 0.0, 0.00));
+		current_shader->SetUniform3f("uSunLight.Kd", glm::vec3(1.00, 1.0, 0.00));
 		current_shader->SetUniform3f("uSunLight.Ks", glm::vec3(1.0));
 
 		current_shader->SetUniform3f("uFlashLight.Position", glm::vec3(fps_camera.GetPosition()));
@@ -343,12 +317,9 @@ int main()
 		current_shader->SetUniform1f("uMaterial.Shininess", shininess * 128);
 
 		current_shader->SetUniform3f("uDirLight.Direction", glm::vec3(0, -0.1, 0));
-		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.50));
-		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.50));
+		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.4));
+		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.4));
 		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1));
-
-
-
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
 		{
@@ -393,7 +364,6 @@ int main()
 			current_shader->SetUniform3f("uFlashLight.Direction", glm::vec3(pos.x, pos.y, pos.z));
 			current_shader->SetUniform3f("uFlashLight.Kd", glm::vec3(1));
 			current_shader->SetUniform3f("uFlashLight.Ks", glm::vec3(1));
-
 		}
 		else
 		{
@@ -431,7 +401,6 @@ int main()
 			mode_render_filled_triangles(model, current_shader, glm::vec3(filled_color));
 			mode_render_triangles(model, current_shader, glm::vec3(points_and_lines_color));
 			mode_averaged_normals(model, current_shader, averaged_normals_color);
-
 			break;
 		case 7:
 			switch (state.shading_mode)
@@ -457,18 +426,13 @@ int main()
 		case 8:
 			current_shader = &phong_shader_material_texture;
 			glUseProgram(current_shader->GetId());
-
-			current_shader->SetUniform1i("uMaterial.Ka", 0); // *** Check what is it for
+			current_shader->SetUniform1i("uMaterial.Ka", 0);
 			current_shader->SetUniform1i("uMaterial.Kd", 0);
 			current_shader->SetUniform1i("uMaterial.Ks", 1);
-		
-
-
 			glActiveTexture(GL_TEXTURE0);
 			glBindTexture(GL_TEXTURE_2D, test_texture);
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, test_specular_texture);
-
 			model.RenderSmooth();
 			break;
 		default:
@@ -478,11 +442,8 @@ int main()
 		glBindVertexArray(0);
 		glUseProgram(0);
 
-		//////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
 		if (show_gui)
 		{
-
 			ImGui_ImplGlfwGL3_NewFrame();
 			float margin_percentage = 0.025f;
 			int margin_left = static_cast<int>(margin_percentage * window_width);
@@ -514,8 +475,6 @@ int main()
 					ImGui::Text(modes_text[i]);
 				}
 			}
-
-
 			ImGui::Separator();
 			ImGui::Separator();
 			text_color = ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
@@ -643,12 +602,12 @@ int main()
 			ImGui::SliderFloat("Strength", &shininess, 0.025f, 1.0f);
 			ImGui::PopStyleColor(5);
 
-
-
 			ImGui::End();
 
 			ImGui::SetNextWindowPos(ImVec2(margin_right, margin_top), ImGuiCond_Always, ImVec2(1.0f, 0.0f));
+			
 			ImGui::Begin("Controls", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoCollapse);
+			
 			ImGui::Text("GUI toggle - Q");
 			ImGui::Text("Movement - W A S D");
 			ImGui::Text("Up / Down - Space / C");
