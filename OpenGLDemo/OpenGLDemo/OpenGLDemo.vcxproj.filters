@@ -31,12 +31,6 @@
     <None Include="shaders\gouraud.vert">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="shaders\flat.frag">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="shaders\flat.vert">
-      <Filter>Source Files</Filter>
-    </None>
     <None Include="shaders\phong_material_texture.frag">
       <Filter>Source Files</Filter>
     </None>
