@@ -210,7 +210,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 16);
-	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), nullptr, nullptr);
+	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), glfwGetPrimaryMonitor(), nullptr);
 	if (!window)
 	{
 		std::cerr << "Failed to create window" << std::endl;
@@ -267,7 +267,7 @@ int main()
 	float background_color = 0.0f;
 	float filled_color = 0.3f;
 	float points_and_lines_color = 1.0f;
-	float shininess = 1;
+	float shininess = 0.75;
 	glm::mat4 model_matrix(1.0f);
 	glm::vec3 material_ka(1, 1, 1);
 	glm::vec3 material_kd(1, 1, 1);
@@ -317,8 +317,8 @@ int main()
 		current_shader->SetUniform1f("uMaterial.Shininess", shininess * 128);
 
 		current_shader->SetUniform3f("uDirLight.Direction", glm::vec3(0, -0.1, 0));
-		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.4));
-		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.4));
+		current_shader->SetUniform3f("uDirLight.Ka", glm::vec3(0.6));
+		current_shader->SetUniform3f("uDirLight.Kd", glm::vec3(0.6));
 		current_shader->SetUniform3f("uDirLight.Ks", glm::vec3(1));
 
 		if (glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS)
@@ -352,6 +352,8 @@ int main()
 			state.enable_mouse_callback = false;
 
 		}
+
+	
 		else
 		{
 			state.enable_mouse_callback = true;
