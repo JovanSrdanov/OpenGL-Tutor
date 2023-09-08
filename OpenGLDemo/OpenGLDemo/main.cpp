@@ -194,6 +194,19 @@ void mode_averaged_normals(Model model, const Shader* current_shader, const glm:
 	model.RenderAveragedNormals();
 }
 
+void mode_render_with_texture(Model model, unsigned test_texture, unsigned test_specular_texture, Shader* current_shader)
+{
+	glUseProgram(current_shader->GetId());
+	current_shader->SetUniform1i("uMaterial.Ka", 0);
+	current_shader->SetUniform1i("uMaterial.Kd", 0);
+	current_shader->SetUniform1i("uMaterial.Ks", 1);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, test_texture);
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, test_specular_texture);
+	model.RenderSmooth();
+}
+
 int main()
 {
 	GLFWwindow* window = nullptr;
@@ -422,20 +435,11 @@ int main()
 				glUseProgram(current_shader->GetId());
 				model.RenderSmooth();
 				break;
-
 			}
 			break;
 		case 8:
 			current_shader = &phong_shader_material_texture;
-			glUseProgram(current_shader->GetId());
-			current_shader->SetUniform1i("uMaterial.Ka", 0);
-			current_shader->SetUniform1i("uMaterial.Kd", 0);
-			current_shader->SetUniform1i("uMaterial.Ks", 1);
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, test_texture);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, test_specular_texture);
-			model.RenderSmooth();
+			mode_render_with_texture(model, test_texture, test_specular_texture, current_shader);
 			break;
 		default:
 			break;

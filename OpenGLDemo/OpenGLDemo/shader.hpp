@@ -25,6 +25,4 @@ public:
     void SetModel(const glm::mat4& m) const;
     void SetView(const glm::mat4& m) const;
     void SetProjection(const glm::mat4& m) const;
-
-
 };

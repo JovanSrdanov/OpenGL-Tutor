@@ -28,7 +28,7 @@ Camera::UpDown(int direction, float dt) {
 
 void 
 Camera::Rotate(float dx, float dy, float dt) {
-    float RotateVelocity = mLookSpeed * dt;
+	const float RotateVelocity = mLookSpeed * dt;
     mYaw += dx * RotateVelocity;
     mPitch += dy * RotateVelocity;
 

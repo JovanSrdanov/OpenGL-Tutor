@@ -34,6 +34,15 @@ private:
 	std::vector<unsigned> mIndices;
 
 	unsigned loadMeshTexture(const aiMaterial* material, const std::string& resPath, aiTextureType type);
+
+	void processVertices(const aiMesh* mesh, aiVector3D Zero3D);
+	void processIndices(const aiMesh* mesh);
+	void processTextures(const aiMaterial* material, const std::string& resPath);
+	void flatSetup();
+	void normalLinesSetup();
+	void averagedNormalsSetup(int meshNumber, std::string& file_start, std::string& numStr, std::string& file_end,
+	                          std::string& filename);
+	void smoothSetup(std::string& file_start, std::string numStr, std::string file_end, std::string& filename);
 	void processMesh(const aiMesh* mesh, const aiMaterial* material, const std::string& resPath,const int meshNumber);
 
 public:
@@ -45,5 +54,4 @@ public:
 	void RenderFilledTriangles() const;
 	void RenderNormals() const;
 	void RenderAveragedNormals() const;
-	std::vector<float> GetVertices() const;
 };

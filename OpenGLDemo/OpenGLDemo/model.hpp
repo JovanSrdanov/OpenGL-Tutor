@@ -40,7 +40,7 @@ public:
 	void RenderFilledTriangles();
 	void RenderNormals();
 	void RenderAveragedNormals();
-	std::vector<float> GetVertices() const;
+
 };
 
 #define MESH_HP
