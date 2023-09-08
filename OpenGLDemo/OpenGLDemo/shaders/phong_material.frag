@@ -44,10 +44,8 @@ in vec3 vWorldSpaceNormal;
 out vec4 FragColor;
 
 void main() {
-
     vec3 ViewDirection = normalize(uViewPos - vWorldSpaceFragment);
 
-    // Directional Light
     vec3 DirLightVector = normalize(-uDirLight.Direction);
     float DirDiffuse = max(dot(vWorldSpaceNormal, DirLightVector), 0.0f);
     vec3 DirReflectDirection = reflect(-DirLightVector, vWorldSpaceNormal);
@@ -57,39 +55,31 @@ void main() {
     vec3 DirSpecularColor = uDirLight.Ks * DirSpecular * uMaterial.Ks;
     vec3 DirColor = DirAmbientColor + DirDiffuseColor + DirSpecularColor;
 
-    // Sun
     vec3 PtLightVector = normalize(uSunLight.Position - vWorldSpaceFragment);
     float PtDiffuse = max(dot(vWorldSpaceNormal, PtLightVector), 0.0f);
     vec3 PtReflectDirection = reflect(-PtLightVector, vWorldSpaceNormal);
     float PtSpecular = pow(max(dot(ViewDirection, PtReflectDirection), 0.0f), uMaterial.Shininess);
-
     vec3 PtAmbientColor = uSunLight.Ka * uMaterial.Ka;
     vec3 PtDiffuseColor = PtDiffuse * uSunLight.Kd * uMaterial.Kd;
     vec3 PtSpecularColor = PtSpecular * uSunLight.Ks * uMaterial.Ks;
-
     float PtLightDistance = length(uSunLight.Position - vWorldSpaceFragment);
     float PtAttenuation = 1.0f / (uSunLight.Kc + uSunLight.Kl * PtLightDistance + uSunLight.Kq * (PtLightDistance * PtLightDistance));
     vec3 PtColorSun = PtAttenuation * (PtAmbientColor + PtDiffuseColor + PtSpecularColor);
 
-    // FlashLight
-    vec3 SpotlightVector3 = normalize(uFlashLight.Position - vWorldSpaceFragment);
+    vec3 SpotlightVector = normalize(uFlashLight.Position - vWorldSpaceFragment);
+    float SpotDiffuse = max(dot(vWorldSpaceNormal, SpotlightVector), 0.0f);
+    vec3 SpotReflectDirection = reflect(-SpotlightVector, vWorldSpaceNormal);
+    float SpotSpecular = pow(max(dot(ViewDirection, SpotReflectDirection), 0.0f), uMaterial.Shininess);
+    vec3 SpotAmbientColor = uFlashLight.Ka * uMaterial.Ka;
+    vec3 SpotDiffuseColor = SpotDiffuse * uFlashLight.Kd * uMaterial.Kd;
+    vec3 SpotSpecularColor = SpotSpecular * uFlashLight.Ks * uMaterial.Ks;
+    float SpotlightDistance = length(uFlashLight.Position - vWorldSpaceFragment);
+    float SpotAttenuation = 1.0f / (uFlashLight.Kc + uFlashLight.Kl * SpotlightDistance + uFlashLight.Kq * (SpotlightDistance * SpotlightDistance));
+    float Theta = dot(SpotlightVector, normalize(-uFlashLight.Direction));
+    float Epsilon = uFlashLight.InnerCutOff - uFlashLight.OuterCutOff;
+    float SpotIntensity = clamp((Theta - uFlashLight.OuterCutOff) / Epsilon, 0.0f, 1.0f);
+    vec3 SpotColor = SpotIntensity * SpotAttenuation * (SpotAmbientColor + SpotDiffuseColor + SpotSpecularColor);
 
-    float SpotDiffuse3 = max(dot(vWorldSpaceNormal, SpotlightVector3), 0.0f);
-    vec3 SpotReflectDirection3 = reflect(-SpotlightVector3, vWorldSpaceNormal);
-    float SpotSpecular3 = pow(max(dot(ViewDirection, SpotReflectDirection3), 0.0f), uMaterial.Shininess);
-
-    vec3 SpotAmbientColor3 = uFlashLight.Ka * uMaterial.Ka;
-    vec3 SpotDiffuseColor3 = SpotDiffuse3 * uFlashLight.Kd * uMaterial.Kd;
-    vec3 SpotSpecularColor3 = SpotSpecular3 * uFlashLight.Ks * uMaterial.Ks;
-
-    float SpotlightDistance3 = length(uFlashLight.Position - vWorldSpaceFragment);
-    float SpotAttenuation3 = 1.0f / (uFlashLight.Kc + uFlashLight.Kl * SpotlightDistance3 + uFlashLight.Kq * (SpotlightDistance3 * SpotlightDistance3));
-
-    float Theta3 = dot(SpotlightVector3, normalize(-uFlashLight.Direction));
-    float Epsilon3 = uFlashLight.InnerCutOff - uFlashLight.OuterCutOff;
-    float SpotIntensity3 = clamp((Theta3 - uFlashLight.OuterCutOff) / Epsilon3, 0.0f, 1.0f);
-    vec3 SpotColor3 = SpotIntensity3 * SpotAttenuation3 * (SpotAmbientColor3 + SpotDiffuseColor3 + SpotSpecularColor3);
-
-    vec3 FinalColor = DirColor + PtColorSun + SpotColor3;
+    vec3 FinalColor = DirColor + PtColorSun + SpotColor;
     FragColor = vec4(FinalColor, 1.0f);
 }

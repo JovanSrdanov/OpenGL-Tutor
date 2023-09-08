@@ -3,7 +3,7 @@
 in vec2 UV;
 in vec3 vWorldSpaceFragment;
 in vec3 vWorldSpaceNormal;
-in vec3 FragColor; // Interpolated color from the vertex shader
+in vec3 FragColor; 
 
 out vec4 FinalColor;
 
