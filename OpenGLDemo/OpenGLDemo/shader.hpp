@@ -8,10 +8,14 @@
 
 class Shader {
 
-public:
+private:
+    unsigned loadAndCompileShader(std::string filename, GLuint shaderType);
+    unsigned createBasicProgram(unsigned vShader, unsigned fShader);
+    unsigned mId;
     static const unsigned POSITION_LOCATION = 0;
     static const unsigned COLOR_LOCATION = 1;
-    unsigned mId;
+
+public:
     Shader(const std::string& vShaderPath, const std::string& fShaderPath);
     unsigned GetId() const;
     void SetUniform1i(const std::string& uniform, int v) const;
@@ -22,7 +26,5 @@ public:
     void SetView(const glm::mat4& m) const;
     void SetProjection(const glm::mat4& m) const;
 
-private:
-    unsigned loadAndCompileShader(std::string filename, GLuint shaderType);
-    unsigned createBasicProgram(unsigned vShader, unsigned fShader);
+
 };

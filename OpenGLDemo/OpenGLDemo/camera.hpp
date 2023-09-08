@@ -6,7 +6,7 @@
 
 class Camera {
 
-public: // make private when finished
+public: 
 	glm::vec3 mWorldUp;
 	glm::vec3 mPosition;
 	glm::vec3 mFront;

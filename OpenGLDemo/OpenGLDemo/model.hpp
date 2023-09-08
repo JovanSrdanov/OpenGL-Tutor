@@ -13,10 +13,7 @@
 
 #define POSITION_LOCATION 0
 #define NORMAL_LOCATION 1
-
 #define POSTPROCESS_FLAGS (aiProcess_Triangulate)
-// TOOD: (Jovan): IF model loads with bad textures, use this instead
-// #define POSTPROCESS_FLAGS (aiProcess_Triangulate | aiProcess_FlipUVs)
 #define INVALID_MATERIAL 0xFFFFFFFF
 
 enum EBufferType {
@@ -28,7 +25,7 @@ enum EBufferType {
 };
 
 class Model {
-public:
+private:
 	std::vector<Mesh> mMeshes;
 
 public:

@@ -27,12 +27,12 @@ private:
 	std::vector<float> mVertices_smooth;
 	unsigned mEBO_smooth;
 
-
 	unsigned mVertexCount;
 	unsigned mIndexCount;
 	unsigned mDiffuseTexture;
 	unsigned mSpecularTexture;
 	std::vector<unsigned> mIndices;
+
 	unsigned loadMeshTexture(const aiMaterial* material, const std::string& resPath, aiTextureType type);
 	void processMesh(const aiMesh* mesh, const aiMaterial* material, const std::string& resPath,const int meshNumber);
 
