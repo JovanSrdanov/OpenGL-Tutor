@@ -16,7 +16,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="shaders\basic.vert">
+    <None Include="shaders\phong.vert">
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\phong_material.frag">
@@ -32,6 +32,12 @@
       <Filter>Source Files</Filter>
     </None>
     <None Include="shaders\phong_material_texture.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\flat.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="shaders\flat.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>

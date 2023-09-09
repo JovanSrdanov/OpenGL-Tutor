@@ -144,7 +144,9 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="shaders\basic.vert" />
+    <None Include="shaders\flat.frag" />
+    <None Include="shaders\flat.vert" />
+    <None Include="shaders\phong.vert" />
     <None Include="shaders\color.frag" />
     <None Include="shaders\gouraud.frag" />
     <None Include="shaders\gouraud.vert" />

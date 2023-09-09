@@ -260,10 +260,11 @@ int main()
 		return -1;
 	}
 
-	Shader color_only("shaders/basic.vert", "shaders/color.frag");
+	Shader color_only("shaders/phong.vert", "shaders/color.frag");
+	Shader flat_shader_material("shaders/flat.vert", "shaders/flat.frag");
 	Shader gouraud_shader_material("shaders/gouraud.vert", "shaders/gouraud.frag");
-	Shader phong_shader_material("shaders/basic.vert", "shaders/phong_material.frag");
-	Shader phong_shader_material_texture("shaders/basic.vert", "shaders/phong_material_texture.frag");
+	Shader phong_shader_material("shaders/phong.vert", "shaders/phong_material.frag");
+	Shader phong_shader_material_texture("shaders/phong.vert", "shaders/phong_material_texture.frag");
 	glUseProgram(phong_shader_material.GetId());
 
 	unsigned test_texture = Texture::LoadImageToTexture("res/test.png");
@@ -421,7 +422,7 @@ int main()
 			switch (state.shading_mode)
 			{
 			case flat:
-				current_shader = &gouraud_shader_material;
+				current_shader = &flat_shader_material;
 				glUseProgram(current_shader->GetId());
 				model.RenderFlat();
 				break;
