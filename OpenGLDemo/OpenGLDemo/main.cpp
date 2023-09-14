@@ -223,7 +223,7 @@ int main()
 	glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 	glfwWindowHint(GLFW_MAXIMIZED, GL_TRUE);
 	glfwWindowHint(GLFW_SAMPLES, 16);
-	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), glfwGetPrimaryMonitor(), nullptr);
+	window = glfwCreateWindow(window_width, window_height, window_title.c_str(), nullptr, nullptr);
 	if (!window)
 	{
 		std::cerr << "Failed to create window" << std::endl;
