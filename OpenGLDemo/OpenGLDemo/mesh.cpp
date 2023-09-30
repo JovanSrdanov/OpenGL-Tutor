@@ -12,14 +12,7 @@ Mesh::Mesh(const aiMesh* mesh, const aiMaterial* material, const std::string& re
 void
 Mesh::RenderFlat() const {
 	glBindVertexArray(mVAO_flat);
-	if (mDiffuseTexture) {
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, mDiffuseTexture);
-	}
-	if (mSpecularTexture) {
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, mSpecularTexture);
-	}
+
 	if (mIndexCount) {
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mEBO_flat);
 		glDrawElements(GL_TRIANGLES, mIndexCount, GL_UNSIGNED_INT, (void*)0);
