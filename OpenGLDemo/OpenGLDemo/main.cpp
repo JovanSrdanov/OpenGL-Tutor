@@ -283,9 +283,9 @@ int main()
 	float points_and_lines_color = 1.0f;
 	float shininess = 0.75;
 	glm::mat4 model_matrix(1.0f);
-	glm::vec3 material_ka(1, 1, 1);
-	glm::vec3 material_kd(1, 1, 1);
-	glm::vec3 material_ks(1, 1, 1);
+	glm::vec3 material_ka(0.5);
+	glm::vec3 material_kd(0.5);
+	glm::vec3 material_ks(0.5);
 	glClearColor(background_color, background_color, background_color, 1.0f);
 
 	ImGui::CreateContext();
@@ -312,8 +312,8 @@ int main()
 		current_shader->SetUniform1f("uSunLight.Kc", 0.001);
 		current_shader->SetUniform1f("uSunLight.Kq", 0.01);
 		current_shader->SetUniform1f("uSunLight.Kl", 0.11);
-		current_shader->SetUniform3f("uSunLight.Ka", glm::vec3(0.00, 0.0, 0.00));
-		current_shader->SetUniform3f("uSunLight.Kd", glm::vec3(1.00, 1.0, 0.00));
+		current_shader->SetUniform3f("uSunLight.Ka", glm::vec3(0.5));
+		current_shader->SetUniform3f("uSunLight.Kd", glm::vec3(0.5));
 		current_shader->SetUniform3f("uSunLight.Ks", glm::vec3(1.0));
 
 		current_shader->SetUniform3f("uFlashLight.Position", glm::vec3(fps_camera.GetPosition()));
