@@ -1,4 +1,4 @@
-# OpenGL-Demo
+# OpenGL-Tutor
 
 Bachelor thesis 14.09.2023.  
 Jovan Srdanov RA 145/2019   
