@@ -7,5 +7,8 @@ The work focuses on exploring ways to interactively and gradually present users 
 
 ### This work is now being used by Professor Dragan Ivetić in the "Computer Graphics" course at FTN to better illustrate the material to students.  
 
-Video showcase:  
-https://www.youtube.com/watch?v=5LiVY3ssiLw
+
+
+
+# [Video Showcase - YouTube Link](https://www.youtube.com/watch?v=5LiVY3ssiLw)
+[![video](https://img.youtube.com/vi/5LiVY3ssiLw/0.jpg)](https://www.youtube.com/watch?v=5LiVY3ssiLw)
